@@ -16,6 +16,7 @@ type TreeNodeProps = {
   expanded: Set<string>;
   onToggle: (path: string) => void;
   onFileClick?: (handle: FileSystemFileHandle) => void;
+  onDirClick?: (node: DirNode) => void;
 };
 
 function isDirectory(node: NodeItem): node is DirNode {
@@ -33,12 +34,20 @@ function getFileIconByName(name: string): FC<{ size?: number; color?: string }> 
   return FilePdfIcon;
 }
 
-export function TreeNode({ node, depth, expanded, onToggle, onFileClick }: TreeNodeProps) {
+export function TreeNode({
+  node,
+  depth,
+  expanded,
+  onToggle,
+  onFileClick,
+  onDirClick,
+}: TreeNodeProps) {
   const directory = isDirectory(node);
   const isExpanded = directory && expanded.has(node.path);
 
   const handleLabelClick = () => {
     if (directory) {
+      onDirClick?.(node);
       onToggle(node.path);
     } else if (onFileClick) {
       onFileClick(node.handle);

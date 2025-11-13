@@ -8,9 +8,10 @@ type TreeViewProps = {
   expanded: Set<string>;
   onToggle: (path: string) => void;
   onFileClick?: (handle: FileSystemFileHandle) => void;
+  onDirClick?: (node: DirNode) => void;
 };
 
-export function TreeView({ root, expanded, onToggle, onFileClick }: TreeViewProps) {
+export function TreeView({ root, expanded, onToggle, onFileClick, onDirClick }: TreeViewProps) {
   const children = useMemo(() => root?.children ?? [], [root]);
 
   if (!root || !children.length) {
@@ -31,6 +32,7 @@ export function TreeView({ root, expanded, onToggle, onFileClick }: TreeViewProp
           expanded={expanded}
           onToggle={onToggle}
           onFileClick={onFileClick}
+          onDirClick={onDirClick}
         />
       ))}
     </div>

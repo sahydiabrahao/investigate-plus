@@ -5,3 +5,4 @@ export * from './folder-closed-icon';
 export * from './folder-opened-icon';
 export * from './file-pdf-icon';
 export * from './file-image-icon';
+export * from './file-json-icon';
