@@ -1,9 +1,6 @@
-type ExpandIconProps = {
-  size?: number;
-  color?: string;
-};
+import { IconProps } from './types';
 
-export function ExpandIcon({ size = 32, color = 'white' }: ExpandIconProps) {
+export function ExpandIcon({ size = 32, color = 'white' }: IconProps) {
   return (
     <svg
       width={size}

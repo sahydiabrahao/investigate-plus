@@ -1,9 +1,6 @@
-type ImportIconProps = {
-  size?: number;
-  color?: string;
-};
+import { IconProps } from './types';
 
-export function ImportIcon({ size = 32, color = 'white' }: ImportIconProps) {
+export function ImportIcon({ size = 32, color = 'white' }: IconProps) {
   return (
     <svg
       width={size}

@@ -1,0 +1,82 @@
+@use '@/styles/global' as *;
+
+.tree-node {
+  font-size: $fontSize;
+  color: $textLight;
+  width: 100%;
+  user-select: none;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 2px 4px;
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover {
+      background: $hoverLight;
+    }
+  }
+
+  &__expander {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $textLight;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+
+    svg {
+      display: block;
+    }
+
+    &--placeholder {
+      width: 16px;
+      height: 16px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &:hover {
+      color: $hoverMenuText;
+    }
+  }
+
+  &__icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      display: block;
+    }
+  }
+
+  &__label {
+    background: none;
+    border: none;
+    color: $textLight;
+    font-size: fonSize;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      color: $hoverMenuText;
+    }
+  }
+
+  &__children {
+    margin-left: 0;
+    display: flex;
+    flex-direction: column;
+  }
+}

@@ -1,9 +1,6 @@
-type CollapseIconProps = {
-  size?: number;
-  color?: string;
-};
+import { IconProps } from './types';
 
-export function CollapseIcon({ size = 32, color = 'white' }: CollapseIconProps) {
+export function CollapseIcon({ size = 32, color = 'white' }: IconProps) {
   return (
     <svg
       width={size}
