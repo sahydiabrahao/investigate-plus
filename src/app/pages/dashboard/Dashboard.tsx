@@ -1,84 +1,158 @@
+import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import type { AppLayoutOutletContext } from '@/app/layouts/AppLayout';
-import { useReadJsonFile } from '@/hooks';
-import type { CaseJson } from '@/types/json-default';
+import { AppLayoutOutletContext } from '@/app/layouts/AppLayout';
+import { useReadJsonFile, useWriteJsonFile } from '@/hooks';
+import { CaseJson, CaseMetadata, CaseRecord, createEmptyRecord } from '@/types/json-default';
+import { RecordCard } from '@/app/components/record-card/RecordCard';
 import './Dashboard.scss';
+import { DashboardMessage } from '@/app/components/dashboard-massage/DashboardMessage';
+import { ButtonText } from '@/app/components/button-text/ButtonText';
 
 export default function Dashboard() {
   const { selectedCaseHandle } = useOutletContext<AppLayoutOutletContext>();
+  const { data, loading, error } = useReadJsonFile({ handle: selectedCaseHandle });
+  const [editableCase, setEditableCase] = useState<CaseJson | null>(null);
+  const [originalCase, setOriginalCase] = useState<CaseJson | null>(null);
+  const { save, saving } = useWriteJsonFile({ handle: selectedCaseHandle });
 
-  const { data, loading, error } = useReadJsonFile({
-    handle: selectedCaseHandle,
-  });
+  const hasChanges =
+    editableCase && originalCase
+      ? JSON.stringify(editableCase) !== JSON.stringify(originalCase)
+      : false;
 
-  if (!selectedCaseHandle) {
+  useEffect(() => {
+    if (data) {
+      setEditableCase(data);
+      setOriginalCase(data);
+    } else {
+      setEditableCase(null);
+      setOriginalCase(null);
+    }
+  }, [data]);
+
+  if (!selectedCaseHandle)
     return (
-      <div className='dashboard'>
-        <p className='dashboard__empty'>
-          Selecione um arquivo de caso (.json) na barra lateral para visualizar aqui.
-        </p>
-      </div>
+      <DashboardMessage className='dashboard__empty'>
+        Selecione um arquivo (.json).
+      </DashboardMessage>
     );
-  }
 
-  if (loading) {
-    return (
-      <div className='dashboard'>
-        <p>Carregando dados do caso...</p>
-      </div>
-    );
-  }
+  if (loading || !editableCase) return <DashboardMessage>Carregando...</DashboardMessage>;
 
-  if (error || !data) {
-    return (
-      <div className='dashboard'>
-        <p className='dashboard__error'>{error ?? 'Erro ao carregar dados do caso.'}</p>
-      </div>
-    );
-  }
+  if (error) return <DashboardMessage className='dashboard__error'>{error}</DashboardMessage>;
 
-  const caseData: CaseJson = data;
+  const handleRecordChange = (id: string, updated: CaseRecord) => {
+    setEditableCase((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        records: prev.records.map((record) => (record.id === id ? updated : record)),
+      };
+    });
+  };
+
+  const handleAddRecord = () => {
+    setEditableCase((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        records: [...prev.records, createEmptyRecord()],
+      };
+    });
+  };
+
+  const handleDeleteRecord = (id: string) => {
+    setEditableCase((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        records: prev.records.filter((r) => r.id !== id),
+      };
+    });
+  };
+
+  const handleMetadataChange = (key: keyof CaseMetadata, value: string) => {
+    setEditableCase((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        case: {
+          ...prev.case,
+          [key]: value,
+        },
+      };
+    });
+  };
 
   return (
     <div className='dashboard'>
       <header className='dashboard__header'>
-        <h1 className='dashboard__title'>{caseData.case.id}</h1>
+        <div className='dashboard__header-row'>
+          <h1 className='dashboard__title'>{editableCase.case.id}</h1>
+          <div className='dashboard__header-actions'>
+            <ButtonText text='Novo Registro' variant='filled' size='sm' onClick={handleAddRecord} />
+            <ButtonText
+              text={saving ? 'Salvando...' : 'Salvar Alterações'}
+              size='sm'
+              variant='outline'
+              disabled={saving || !editableCase || !hasChanges}
+              onClick={() => {
+                if (!editableCase) return;
+                save(editableCase);
+                setOriginalCase(editableCase);
+              }}
+            />
+          </div>
+        </div>
         <div className='dashboard__meta'>
-          <span>
-            Crime: <strong>{caseData.case.crime}</strong>
-          </span>
-          <span>
-            Vítima: <strong>{caseData.case.victim}</strong>
-          </span>
-          <span>
-            Atualizado em: <strong>{new Date(caseData.updatedAt).toLocaleString()}</strong>
-          </span>
+          <label className='meta-field'>
+            <span className='meta-field__label'>Crime:</span>
+            <input
+              className='meta-field__input'
+              value={editableCase.case.crime}
+              onChange={(e) => handleMetadataChange('crime', e.target.value)}
+              size={Math.max((editableCase.case.crime.length || 1) + 1, 8)}
+            />
+          </label>
+          <label className='meta-field'>
+            <span className='meta-field__label'>Data:</span>
+            <input
+              className='meta-field__input'
+              value={editableCase.case.date}
+              onChange={(e) => handleMetadataChange('date', e.target.value)}
+              placeholder='XX/XX/XXXX'
+              size={Math.max((editableCase.case.date.length || 1) + 1, 8)}
+            />
+            <label className='meta-field'>
+              <span className='meta-field__label'>Vítima:</span>
+              <input
+                className='meta-field__input'
+                value={editableCase.case.victim}
+                onChange={(e) => handleMetadataChange('victim', e.target.value)}
+                size={Math.max((editableCase.case.victim.length || 1) + 1, 8)}
+              />
+            </label>
+          </label>
         </div>
       </header>
-
       <section className='dashboard__section'>
-        <h2 className='dashboard__section-title'>Registros</h2>
-        {caseData.records.length === 0 && (
-          <p className='dashboard__muted'>Nenhum registro ainda.</p>
+        <h2 className='dashboard__section-title'>Investigação</h2>
+        {editableCase.records.length === 0 && (
+          <p className='dashboard__muted'>Nenhuma informação disponível.</p>
         )}
-
-        {caseData.records.length > 0 && (
-          <ul className='dashboard__records'>
-            {caseData.records.map((record) => (
-              <li key={record.id} className='dashboard__record'>
-                <div className='dashboard__record-header'>
-                  <span className='dashboard__record-id'>{record.id}</span>
-                  <span className='dashboard__record-status'>
-                    {record.status || '(sem status)'}
-                  </span>
-                </div>
-                <div className='dashboard__record-value'>
-                  {record.value || <span className='dashboard__muted'>(vazio)</span>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className='dashboard__records'>
+          {editableCase.records.map((record) => (
+            <RecordCard
+              key={record.id}
+              record={record}
+              onChange={(updated) => handleRecordChange(record.id, updated)}
+              onDelete={() => handleDeleteRecord(record.id)}
+            />
+          ))}
+        </div>
       </section>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { scanDirectoryTree, type DirNode } from '@/utils/read-directory-tree';
+import { createNewCase } from '@/types/json-default';
 
 type UseCreateJsonFileParams = {
   rootHandle: FileSystemDirectoryHandle | null;
@@ -64,24 +65,7 @@ export function useCreateJsonFile({
       }
     }
 
-    const data = {
-      version: 1,
-      case: {
-        id: caseId,
-        title: 'title',
-        crime: 'crime',
-        victim: 'victim',
-      },
-      updatedAt: new Date().toISOString(),
-      records: [
-        {
-          id: crypto.randomUUID(),
-          status: '',
-          value: '',
-        },
-      ],
-    };
-
+    const data = createNewCase(caseId);
     const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(JSON.stringify(data, null, 2));

@@ -1,0 +1,64 @@
+@use '@/styles/global' as *;
+
+.button-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+
+  &--filled {
+    background: $buttonDark;
+    color: $textLight;
+    border: none;
+
+    &:hover {
+      background: $hoverDark;
+    }
+  }
+
+  &--outline {
+    background: transparent;
+    border: 1px solid $buttonDark;
+    color: $textDark;
+
+    &:hover {
+      background: $hoverLight;
+      border-color: $buttonDark;
+    }
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  &--sm {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+
+  &--md {
+    font-size: 0.875rem;
+    padding: 6px 12px;
+  }
+
+  &--lg {
+    font-size: 1rem;
+    padding: 8px 14px;
+  }
+}

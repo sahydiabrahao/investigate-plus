@@ -1,19 +1,28 @@
+@use '@/styles/global' as *;
+
 .dashboard {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.dashboard__empty,
-.dashboard__error {
-  font-size: 14px;
-  opacity: 0.8;
-}
-
 .dashboard__header {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.dashboard__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.dashboard__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dashboard__title {
@@ -23,10 +32,49 @@
 
 .dashboard__meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 12px;
+  gap: 16px;
+  align-items: center;
+}
+
+.meta-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
   opacity: 0.9;
+}
+
+.meta-field__label {
+  font-weight: 400;
+  color: $textDark;
+}
+
+.meta-field__value {
+  font-weight: 600;
+  color: $textDark;
+  opacity: 1;
+}
+
+.meta-field__input {
+  width: auto;
+  min-width: 40px;
+  max-width: 300px;
+
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 6px;
+  color: $textDark;
+  font-size: 14px;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: $buttonDark;
+    background: rgba(0, 0, 0, 0.04);
+  }
 }
 
 .dashboard__section {

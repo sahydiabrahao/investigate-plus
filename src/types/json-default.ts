@@ -1,7 +1,10 @@
+export type RecordStatus = 'waiting' | 'pending' | 'answered';
+
 export interface CaseRecord {
   id: string;
-  status: string;
-  value: string;
+  target: string;
+  details: string;
+  status: RecordStatus;
 }
 
 export interface CaseMetadata {
@@ -9,11 +12,34 @@ export interface CaseMetadata {
   title: string;
   crime: string;
   victim: string;
+  date: string;
 }
 
 export interface CaseJson {
   version: number;
   case: CaseMetadata;
-  updatedAt: string;
   records: CaseRecord[];
+}
+
+export function createEmptyRecord(): CaseRecord {
+  return {
+    id: crypto.randomUUID(),
+    target: '',
+    details: '',
+    status: 'waiting',
+  };
+}
+
+export function createNewCase(caseId: string): CaseJson {
+  return {
+    version: 1,
+    case: {
+      id: caseId,
+      title: 'title',
+      crime: 'crime',
+      victim: 'victim',
+      date: 'XX/XX/XXXX',
+    },
+    records: [createEmptyRecord()],
+  };
 }
