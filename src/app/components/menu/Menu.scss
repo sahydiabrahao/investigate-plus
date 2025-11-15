@@ -20,13 +20,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: $fontSize;
+  font-size: $fontSizeSm;
   font-weight: $fontWeightBold;
   opacity: 0.9;
 }
 
 .menu__label-icon {
-  font-size: 16px;
+  font-size: $fontSizeMd;
 }
 
 .menu__list {
@@ -36,7 +36,7 @@
 }
 
 .menu__item {
-  font-size: $fontSize;
+  font-size: $fontSizeSm;
   opacity: 0.9;
   cursor: pointer;
   padding: 6px 4px;

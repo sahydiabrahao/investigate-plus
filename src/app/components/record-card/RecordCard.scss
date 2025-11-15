@@ -28,12 +28,12 @@
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
-  font-size: 12px;
+  font-size: $fontSizeSm;
   color: inherit;
 }
 
 .record-card__label {
-  font-size: 14px;
+  font-size: $fontSizeSm;
   color: $textDark;
 }
 
@@ -44,7 +44,7 @@
 .record-card__details {
   width: 100%;
   padding: 6px 8px;
-  font-size: 12px;
+  font-size: $fontSizeSm;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);

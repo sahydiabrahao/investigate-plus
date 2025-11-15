@@ -48,17 +48,17 @@
   }
 
   &--sm {
-    font-size: 0.75rem;
+    font-size: $fontSizeSm;
     padding: 4px 8px;
   }
 
   &--md {
-    font-size: 0.875rem;
+    font-size: $fontSizeMd;
     padding: 6px 12px;
   }
 
   &--lg {
-    font-size: 1rem;
+    font-size: $fontSizeLg;
     padding: 8px 14px;
   }
 }

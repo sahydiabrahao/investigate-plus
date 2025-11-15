@@ -16,18 +16,20 @@ $statusSuccess: #22c55e;
 $statusWarning: #facc15;
 $statusDanger: #ef4444;
 
-$fontSize: 12px;
+$fontSizeSm: 12px;
+$fontSizeMd: 14px;
+$fontSizeLg: 18px;
 
 $fontWeightRegular: 400;
 $fontWeightBold: 700;
 
 .text {
-  font-size: $fontSize;
+  font-size: $fontSizeSm;
   font-weight: $fontWeightRegular;
 }
 
 .text-bold {
-  font-size: $fontSize;
+  font-size: $fontSizeSm;
   font-weight: $fontWeightBold;
 }
 

@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 2px;
   width: 100%;
-  font-size: $fontSize;
+  font-size: $fontSizeSm;
   color: $textLight;
 
   &--empty {
@@ -13,7 +13,7 @@
   }
 
   &__empty {
-    font-size: 12px;
+    font-size: $fontSizeSm;
     padding: 4px 4px;
     color: $textMutedLight;
   }

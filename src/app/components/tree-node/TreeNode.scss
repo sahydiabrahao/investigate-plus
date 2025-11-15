@@ -1,7 +1,7 @@
 @use '@/styles/global' as *;
 
 .tree-node {
-  font-size: $fontSize;
+  font-size: $fontSizeSm;
   color: $textLight;
   width: 100%;
   user-select: none;
