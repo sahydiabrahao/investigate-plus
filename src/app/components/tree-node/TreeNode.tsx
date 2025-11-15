@@ -84,7 +84,12 @@ export function TreeNode({
             FileIcon && <FileIcon size={16} color='currentColor' />
           )}
         </span>
-        <button type='button' className='tree-node__label' onClick={handleLabelClick}>
+        <button
+          type='button'
+          className='tree-node__label'
+          onClick={handleLabelClick}
+          title={node.name}
+        >
           {node.name}
         </button>
       </div>
