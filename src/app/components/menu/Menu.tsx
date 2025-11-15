@@ -1,8 +1,9 @@
 import './Menu.scss';
 import { ButtonIcon } from '@/app/components/button-icon/ButtonIcon';
-import { ImportIcon, ExpandIcon, CollapseIcon, FileJsonIcon } from '@/icons';
+import { ImportIcon, ExpandIcon, CollapseIcon, FileJsonIcon, RefreshIcon } from '@/icons';
 import { TreePanel } from '@/app/components/tree-panel/TreePanel';
 import { useReadDirectoryHandle, useTreeState, useCreateJsonFile } from '@/hooks';
+import { scanDirectoryTree } from '@/utils/read-directory-tree';
 
 type MenuProps = {
   onCaseJsonSelected?: (handle: FileSystemFileHandle) => void;
@@ -27,6 +28,12 @@ export function Menu({ onCaseJsonSelected }: MenuProps) {
     setDirTree,
   });
 
+  async function handleRefreshTree() {
+    if (!rootHandle) return;
+    const updatedTree = await scanDirectoryTree(rootHandle);
+    setDirTree(updatedTree);
+  }
+
   async function handleFileClick(handle: FileSystemFileHandle) {
     const file = await handle.getFile();
     const name = file.name.toLowerCase();
@@ -44,6 +51,7 @@ export function Menu({ onCaseJsonSelected }: MenuProps) {
       <div className='menu__actions'>
         <ButtonIcon icon={ImportIcon} onClick={importFolder} size='lg' />
         <ButtonIcon icon={FileJsonIcon} onClick={createJsonFile} size='lg' />
+        <ButtonIcon icon={RefreshIcon} onClick={handleRefreshTree} size='lg' />
         <ButtonIcon icon={ExpandIcon} onClick={handleExpandAll} size='lg' />
         <ButtonIcon icon={CollapseIcon} onClick={handleCollapseAll} size='lg' />
       </div>
