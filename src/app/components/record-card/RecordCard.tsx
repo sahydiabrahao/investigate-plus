@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type { CaseRecord } from '@/types/json-default';
 import { ButtonText } from '@/app/components/button-text/ButtonText';
 import './RecordCard.scss';
@@ -10,6 +10,7 @@ type RecordCardProps = {
 };
 
 export function RecordCard({ record, onChange, onDelete }: RecordCardProps) {
+  const [collapsed, setCollapsed] = useState(true);
   const update = useCallback(
     (patch: Partial<CaseRecord>) => {
       onChange?.({ ...record, ...patch });
@@ -41,6 +42,12 @@ export function RecordCard({ record, onChange, onDelete }: RecordCardProps) {
           placeholder='Ex: CPF, Telefone, PIX...'
         />
         <ButtonText
+          text={collapsed ? '▼' : '▲'}
+          size='sm'
+          variant='outline'
+          onClick={() => setCollapsed((prev) => !prev)}
+        />
+        <ButtonText
           text='🗑️'
           size='sm'
           variant='outline'
@@ -51,15 +58,17 @@ export function RecordCard({ record, onChange, onDelete }: RecordCardProps) {
           }}
         />
       </div>
-      <div className='record-card__section'>
-        <textarea
-          className='record-card__details'
-          value={record.details}
-          onChange={handleDetails}
-          placeholder={'[✔️] # OFÍCIO: Nome;'}
-          rows={1}
-        />
-      </div>
+      {!collapsed && (
+        <div className='record-card__section'>
+          <textarea
+            className='record-card__details'
+            value={record.details}
+            onChange={handleDetails}
+            placeholder='[✔️] # OFÍCIO: Nome;'
+            rows={1}
+          />
+        </div>
+      )}
     </article>
   );
 }
