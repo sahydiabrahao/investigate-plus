@@ -1,17 +1,26 @@
+import type { Dispatch, SetStateAction } from 'react';
 import './Menu.scss';
 import { ButtonIcon } from '@/app/components/button-icon/ButtonIcon';
 import { ImportIcon, ExpandIcon, CollapseIcon, FileJsonIcon, RefreshIcon } from '@/icons';
 import { TreePanel } from '@/app/components/tree-panel/TreePanel';
-import { useReadDirectoryHandle, useTreeState, useCreateJsonFile } from '@/hooks';
-import { scanDirectoryTree } from '@/utils/read-directory-tree';
+import { useTreeState, useCreateJsonFile } from '@/hooks';
+import { scanDirectoryTree, type DirNode } from '@/utils/read-directory-tree';
 
 type MenuProps = {
   onCaseJsonSelected?: (handle: FileSystemFileHandle) => void;
+  dirTree: DirNode | null;
+  setDirTree: Dispatch<SetStateAction<DirNode | null>>;
+  rootHandle: FileSystemDirectoryHandle | null;
+  importFolder: () => Promise<void>;
 };
 
-export function Menu({ onCaseJsonSelected }: MenuProps) {
-  const { dirTree, setDirTree, rootHandle, importFolder } = useReadDirectoryHandle();
-
+export function Menu({
+  onCaseJsonSelected,
+  dirTree,
+  setDirTree,
+  rootHandle,
+  importFolder,
+}: MenuProps) {
   const {
     expanded,
     currentDirPath,

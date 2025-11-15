@@ -8,9 +8,10 @@ import './Dashboard.scss';
 import { DashboardMessage } from '@/app/components/dashboard-massage/DashboardMessage';
 import { ButtonText } from '@/app/components/button-text/ButtonText';
 import { ButtonStatus } from '@/app/components/button-status/ButtonStatus';
+import { findFileInTree } from '@/utils/find-file-in-tree';
 
 export default function Dashboard() {
-  const { selectedCaseHandle } = useOutletContext<AppLayoutOutletContext>();
+  const { selectedCaseHandle, dirTree } = useOutletContext<AppLayoutOutletContext>();
   const { data, loading, error } = useReadJsonFile({ handle: selectedCaseHandle });
   const [editableCase, setEditableCase] = useState<CaseJson | null>(null);
   const [originalCase, setOriginalCase] = useState<CaseJson | null>(null);
@@ -30,18 +31,14 @@ export default function Dashboard() {
       setOriginalCase(null);
     }
   }, [data]);
-
   if (!selectedCaseHandle)
     return (
       <DashboardMessage className='dashboard__empty'>
         Selecione um arquivo (.json).
       </DashboardMessage>
     );
-
   if (loading || !editableCase) return <DashboardMessage>Carregando...</DashboardMessage>;
-
   if (error) return <DashboardMessage className='dashboard__error'>{error}</DashboardMessage>;
-
   const handleRecordChange = (id: string, updated: CaseRecord) => {
     setEditableCase((prev) => {
       if (!prev) return prev;
@@ -55,7 +52,6 @@ export default function Dashboard() {
   const handleAddRecord = () => {
     setEditableCase((prev) => {
       if (!prev) return prev;
-
       return {
         ...prev,
         records: [...prev.records, createEmptyRecord()],
@@ -66,7 +62,6 @@ export default function Dashboard() {
   const handleDeleteRecord = (id: string) => {
     setEditableCase((prev) => {
       if (!prev) return prev;
-
       return {
         ...prev,
         records: prev.records.filter((r) => r.id !== id),
@@ -92,23 +87,41 @@ export default function Dashboard() {
     el.style.height = '0px';
     el.style.height = el.scrollHeight + 'px';
   }
-
   const handleMoveRecord = (fromIndex: number, toIndex: number) => {
     setEditableCase((prev) => {
       if (!prev) return prev;
-
       const records = [...prev.records];
       if (toIndex < 0 || toIndex >= records.length) return prev;
-
       const [moved] = records.splice(fromIndex, 1);
       records.splice(toIndex, 0, moved);
-
       return {
         ...prev,
         records,
       };
     });
   };
+
+  async function handleOpenReference(fileName: string) {
+    if (!dirTree) {
+      alert('Nenhuma pasta carregada.');
+      return;
+    }
+    const handle = findFileInTree(dirTree, fileName);
+    if (!handle) {
+      alert(`Arquivo não encontrado: ${fileName}`);
+      return;
+    }
+    try {
+      const file = await handle.getFile();
+      const url = URL.createObjectURL(file);
+
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (err) {
+      alert('Erro ao abrir arquivo.');
+      console.error(err);
+    }
+  }
 
   return (
     <div className='dashboard'>
@@ -195,6 +208,7 @@ export default function Dashboard() {
               }
               isFirst={index === 0}
               isLast={index === editableCase.records.length - 1}
+              onOpenReference={handleOpenReference}
             />
           ))}
         </div>
