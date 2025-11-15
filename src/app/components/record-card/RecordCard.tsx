@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CaseRecord } from '@/types/json-default';
 import { ButtonText } from '@/app/components/button-text/ButtonText';
 import './RecordCard.scss';
@@ -146,6 +146,12 @@ export function RecordCard({
 
   const mirrorPrefix =
     activeRef && activeRef.startIndex >= 0 ? record.details.slice(0, activeRef.startIndex) : '';
+
+  useLayoutEffect(() => {
+    if (!collapsed && detailsRef.current) {
+      autoResize(detailsRef.current);
+    }
+  }, [collapsed, record.details]);
 
   return (
     <article className='record-card' ref={containerRef}>

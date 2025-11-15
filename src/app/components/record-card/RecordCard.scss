@@ -3,6 +3,7 @@
 .record-card {
   position: relative;
   padding: 2px 0 2px 8px;
+  background-color: rgba(240, 242, 245, 0.8);
 }
 
 .record-card::before {
@@ -114,7 +115,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   color: inherit;
-  resize: vertical;
+  resize: none;
   overflow: hidden;
 }
 
