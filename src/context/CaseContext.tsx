@@ -14,6 +14,8 @@ import { loadAllCaseStatus, saveCaseStatus } from '@/storage';
 
 type CaseStatusMap = Record<string, CaseStatus>;
 
+export type ViewMode = 'dashboard' | 'overview';
+
 type CaseContextValue = {
   rootHandle: FileSystemDirectoryHandle | null;
   dirTree: DirNode | null;
@@ -29,6 +31,9 @@ type CaseContextValue = {
 
   currentDirPath: string | null;
   setCurrentDirPath: (path: string | null) => void;
+
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
 };
 
 const CaseContext = createContext<CaseContextValue | null>(null);
@@ -41,6 +46,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
   const [statusByFile, setStatusByFile] = useState<CaseStatusMap>({});
 
   const [currentDirPath, setCurrentDirPath] = useState<string | null>(null);
+
+  const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
 
   useEffect(() => {
     (async () => {
@@ -90,6 +97,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       setStatus,
       currentDirPath,
       setCurrentDirPath,
+      viewMode,
+      setViewMode,
     }),
     [
       rootHandle,
@@ -100,6 +109,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       getStatus,
       setStatus,
       currentDirPath,
+      viewMode,
     ]
   );
 

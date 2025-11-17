@@ -1,8 +1,13 @@
-import { Outlet } from 'react-router-dom';
-import { Menu, Sidebar } from '@/app/components';
+import { Menu } from '@/app/components/menu/Menu';
+import { Sidebar } from '@/app/components/sidebar/Sidebar';
+import Dashboard from '@/app/pages/dashboard/Dashboard';
+import Overview from '@/app/pages/overview/OverView';
+import { useCaseContext } from '@/context/CaseContext';
 import './AppLayout.scss';
 
 export function AppLayout() {
+  const { viewMode } = useCaseContext();
+
   return (
     <div className='app-layout'>
       <aside className='app-layout__sidebar'>
@@ -14,7 +19,7 @@ export function AppLayout() {
       </aside>
 
       <main className='app-layout__content'>
-        <Outlet />
+        {viewMode === 'overview' ? <Overview /> : <Dashboard />}
       </main>
     </div>
   );

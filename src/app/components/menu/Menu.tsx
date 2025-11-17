@@ -5,8 +5,7 @@ import type { DirNode } from '@/utils/read-directory-tree';
 import { useCaseContext } from '@/context/CaseContext';
 
 export function Menu() {
-  const { dirTree, setSelectedCaseHandle, setCurrentDirPath } = useCaseContext();
-
+  const { dirTree, setSelectedCaseHandle, setCurrentDirPath, setViewMode } = useCaseContext();
   const { expanded, handleToggle, handleDirClick } = useTreeState(dirTree);
 
   async function handleFileClick(handle: FileSystemFileHandle) {
@@ -14,10 +13,10 @@ export function Menu() {
     const name = file.name.toLowerCase();
 
     if (name.endsWith('.json')) {
-      setSelectedCaseHandle?.(handle);
+      setSelectedCaseHandle(handle);
+      setViewMode('dashboard');
       return;
     }
-
     const url = URL.createObjectURL(file);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 5000);

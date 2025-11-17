@@ -6,7 +6,8 @@ import { scanDirectoryTree } from '@/utils/read-directory-tree';
 import './Sidebar.scss';
 
 export function Sidebar() {
-  const { dirTree, setDirTree, rootHandle, importFolder, currentDirPath } = useCaseContext();
+  const { dirTree, setDirTree, rootHandle, importFolder, currentDirPath, setViewMode } =
+    useCaseContext();
 
   const { createJsonFile } = useCreateJsonFile({
     rootHandle,
@@ -23,7 +24,8 @@ export function Sidebar() {
 
   return (
     <div className='sidebar'>
-      <ButtonIcon icon={ListIcon} size='lg' />
+      <ButtonIcon icon={ListIcon} size='lg' onClick={() => setViewMode('overview')} />
+
       <ButtonIcon icon={RefreshIcon} onClick={handleRefreshTree} size='lg' />
       <ButtonIcon icon={ImportIcon} onClick={importFolder} size='lg' />
       <ButtonIcon icon={FileJsonIcon} onClick={createJsonFile} size='lg' />
