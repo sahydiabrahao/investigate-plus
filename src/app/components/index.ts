@@ -9,3 +9,4 @@ export * from './tree-node/TreeNode';
 export * from './tree-panel/TreePanel';
 export * from './tree-view/TreeView';
 export * from './sidebar/Sidebar';
+export * from './case-card/CaseCard';

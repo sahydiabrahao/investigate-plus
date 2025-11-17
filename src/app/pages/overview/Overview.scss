@@ -3,149 +3,30 @@
 .overview {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 8px;
   width: 100%;
+}
 
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
+.overview__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
 
-  &__title {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: $textDark;
-  }
+.overview__title {
+  font-size: $fontSizeLg;
+  margin: 0;
+  color: $textDark;
+}
 
-  &__subtitle {
-    font-size: 0.9rem;
-    color: rgba($textDark, 0.6);
-  }
+.overview__subtitle {
+  font-size: $fontSizeSm;
+  opacity: 0.7;
+}
 
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  &__filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: rgba($textDark, 0.7);
-  }
-
-  &__filter-pill {
-    padding: 0.3rem 0.7rem;
-    border-radius: 999px;
-    border: 1px solid rgba($textDark, 0.08);
-    background: rgba(#fff, 0.8);
-    cursor: pointer;
-    transition:
-      background 0.15s ease,
-      border-color 0.15s ease;
-
-    &--active {
-      background: rgba($primary, 0.1);
-      border-color: rgba($primary, 0.4);
-    }
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1rem;
-  }
-
-  &__card {
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.03);
-    padding: 1rem 1.1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    cursor: pointer;
-
-    transition:
-      transform 0.12s ease,
-      box-shadow 0.12s ease,
-      border-color 0.12s ease;
-
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-      border-color: rgba(15, 23, 42, 0.06);
-    }
-  }
-
-  &__card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 0.15rem;
-  }
-
-  &__id {
-    font-size: 1rem;
-    font-weight: 600;
-    color: $textDark;
-  }
-
-  &__status {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-  }
-
-  &__meta-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    font-size: 0.85rem;
-    color: rgba($textDark, 0.7);
-  }
-
-  &__meta-label {
-    font-weight: 600;
-  }
-
-  &__meta-value {
-    font-weight: 400;
-  }
-
-  &__resume {
-    margin-top: 0.4rem;
-    font-size: 0.85rem;
-    color: rgba($textDark, 0.7);
-    line-height: 1.4;
-  }
-
-  &__badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.12rem 0.5rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    background: rgba($textDark, 0.03);
-    color: rgba($textDark, 0.65);
-  }
-
-  &__empty,
-  &__loading,
-  &__error {
-    padding: 2rem 0;
-    text-align: center;
-    font-size: 0.95rem;
-    color: rgba($textDark, 0.7);
-  }
-
-  &__error {
-    color: #e11d48;
-  }
+.overview__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
