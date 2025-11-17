@@ -279,6 +279,7 @@ export default function Dashboard() {
                 className='meta-field__input'
                 value={editableCase.case.crime}
                 onChange={(e) => handleMetadataChange('crime', e.target.value)}
+                size={Math.max((editableCase.case.crime.length || 1) + 1, 8)}
               />
             </label>
 
@@ -288,6 +289,7 @@ export default function Dashboard() {
                 className='meta-field__input'
                 value={editableCase.case.victim}
                 onChange={(e) => handleMetadataChange('victim', e.target.value)}
+                size={Math.max((editableCase.case.victim.length || 1) + 1, 8)}
               />
             </label>
           </label>
