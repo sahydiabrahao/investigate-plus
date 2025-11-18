@@ -15,7 +15,7 @@ type RecordCardProps = {
 };
 
 type ActiveReference = {
-  fileName: string;
+  index: number;
   startIndex: number;
 } | null;
 
@@ -33,11 +33,14 @@ export function RecordCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeRef, setActiveRef] = useState<ActiveReference>(null);
   const [linkPos, setLinkPos] = useState<{ top: number; left: number } | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const detailsRef = useRef<HTMLTextAreaElement | null>(null);
   const mirrorWrapperRef = useRef<HTMLDivElement | null>(null);
   const markerRef = useRef<HTMLSpanElement | null>(null);
+
+  const [linkFiles, setLinkFiles] = useState<string[]>(record.linkFiles ?? []);
 
   const update = useCallback(
     (patch: Partial<CaseRecord>) => {
@@ -60,26 +63,50 @@ export function RecordCard({
     updateActiveReference();
   };
 
+  useEffect(() => {
+    const matches = record.details.match(/\[🔗\]/g) ?? [];
+    const count = matches.length;
+
+    setLinkFiles((prev) => {
+      const next = [...prev];
+      while (next.length < count) next.push('');
+      if (next.length > count) next.length = count;
+      if (next.length !== prev.length) update({ linkFiles: next });
+      return next;
+    });
+  }, [record.details]);
+
+  useEffect(() => {
+    setLinkFiles(record.linkFiles ?? []);
+  }, []);
+
   function updateActiveReference() {
     const el = detailsRef.current;
     if (!el) {
       setActiveRef(null);
       return;
     }
+
     const value = el.value;
     const cursor = el.selectionStart ?? 0;
-    const regex = /\[\[([^\]]+)\]\]/g;
+
+    const regex = /\[🔗\]/g;
     let match: RegExpExecArray | null = null;
+    let index = 0;
     let found: ActiveReference = null;
 
     while ((match = regex.exec(value))) {
       const start = match.index;
       const end = start + match[0].length;
+
       if (cursor >= start && cursor <= end) {
-        found = { fileName: match[1], startIndex: end };
+        found = { index, startIndex: end };
         break;
       }
+
+      index++;
     }
+
     setActiveRef(found);
   }
 
@@ -88,11 +115,12 @@ export function RecordCard({
       setLinkPos(null);
       return;
     }
+
     const wrapperRect = mirrorWrapperRef.current.getBoundingClientRect();
     const markerRect = markerRef.current.getBoundingClientRect();
-    const offsetY = 0;
+
     setLinkPos({
-      top: markerRect.top - wrapperRect.top - offsetY,
+      top: markerRect.top - wrapperRect.top,
       left: markerRect.left - wrapperRect.left,
     });
   }, [activeRef, record.details]);
@@ -104,12 +132,9 @@ export function RecordCard({
         setMenuOpen(false);
       }
     }
-    if (menuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+
+    if (menuOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
 
   const handleDelete = () => {
@@ -130,9 +155,24 @@ export function RecordCard({
   };
 
   const handleOpenReference = () => {
-    if (activeRef && onOpenReference) {
-      onOpenReference(activeRef.fileName);
+    if (!activeRef) return;
+
+    const currentFileName = linkFiles[activeRef.index] || '';
+
+    if (!currentFileName) {
+      const name = window.prompt('Informe o nome do arquivo (ex: arquivo.pdf):');
+      if (!name) return;
+
+      const next = [...linkFiles];
+      next[activeRef.index] = name.trim();
+      setLinkFiles(next);
+      update({ linkFiles: next });
+
+      onOpenReference?.(name.trim());
+      return;
     }
+
+    onOpenReference?.(currentFileName);
   };
 
   useEffect(() => {
@@ -142,20 +182,19 @@ export function RecordCard({
         setActiveRef(null);
       }
     }
+
     document.addEventListener('mousedown', handleClickOutsideCard);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutsideCard);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutsideCard);
   }, []);
 
   const mirrorPrefix =
     activeRef && activeRef.startIndex >= 0 ? record.details.slice(0, activeRef.startIndex) : '';
 
   useLayoutEffect(() => {
-    if (!collapsed && detailsRef.current) {
-      autoResize(detailsRef.current);
-    }
+    if (!collapsed && detailsRef.current) autoResize(detailsRef.current);
   }, [collapsed, record.details]);
+
+  const currentFileName = activeRef && linkFiles[activeRef.index] ? linkFiles[activeRef.index] : '';
 
   return (
     <article className='record-card' ref={containerRef}>
@@ -228,7 +267,7 @@ export function RecordCard({
             onClick={updateActiveReference}
             onKeyUp={updateActiveReference}
             onSelect={updateActiveReference}
-            placeholder='[✔️] # TÍTULO: Descrição;'
+            placeholder='[✔️] # TÍTULO: Descrição; Use [🔗] para links.'
             rows={1}
           />
 
@@ -245,9 +284,9 @@ export function RecordCard({
               className='record-card__link-hint'
               style={{ top: linkPos.top, left: linkPos.left }}
               onClick={handleOpenReference}
-              title={`Abrir "${activeRef.fileName}"`}
+              title={currentFileName ? `Abrir "${currentFileName}"` : 'Definir arquivo'}
             >
-              🔗 Abrir
+              🔗 {currentFileName ? 'Abrir' : 'Definir arquivo'}
             </button>
           )}
         </div>

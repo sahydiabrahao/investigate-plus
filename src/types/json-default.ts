@@ -1,8 +1,10 @@
 export type CaseStatus = 'null' | 'waiting' | 'completed' | 'urgent' | 'review';
+
 export interface CaseRecord {
   id: string;
   target: string;
   details: string;
+  linkFiles?: string[];
 }
 
 export interface CaseMetadata {
@@ -40,6 +42,7 @@ export function createEmptyRecord(): CaseRecord {
     id: crypto.randomUUID(),
     target: '',
     details: '',
+    linkFiles: [],
   };
 }
 
@@ -68,15 +71,18 @@ export function normalizeCaseJson(raw: Partial<CaseJson>): CaseJson {
   };
 
   const normalizedRecords: CaseRecord[] = Array.isArray(raw.records)
-    ? raw.records.map(
-        (r: Partial<CaseRecord>): CaseRecord => ({
-          ...createEmptyRecord(),
+    ? raw.records.map((r: Partial<CaseRecord>): CaseRecord => {
+        const empty = createEmptyRecord();
+
+        return {
+          ...empty,
           ...r,
           id: r.id ?? crypto.randomUUID(),
           target: r.target ?? '',
           details: r.details ?? '',
-        })
-      )
+          linkFiles: Array.isArray(r.linkFiles) ? r.linkFiles : empty.linkFiles,
+        };
+      })
     : base.records;
 
   return {

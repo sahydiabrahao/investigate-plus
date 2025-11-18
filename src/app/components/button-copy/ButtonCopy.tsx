@@ -22,6 +22,7 @@ export function ButtonCopy() {
       <ButtonText text='❌' size='sm' variant='filled' onClick={() => copy('[❌]')} />
       <ButtonText text='🕒' size='sm' variant='filled' onClick={() => copy('[🕒]')} />
       <ButtonText text='🔍' size='sm' variant='filled' onClick={() => copy('[🔍]')} />
+      <ButtonText text='🔗' size='sm' variant='filled' onClick={() => copy('[🔗]')} />
       <ButtonText text='✔️' size='sm' variant='filled' onClick={() => copy('[✔️]')} />
     </div>
   );
