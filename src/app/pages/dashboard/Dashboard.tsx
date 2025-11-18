@@ -231,7 +231,13 @@ export default function Dashboard() {
                     <ButtonStatus status='urgent' size='md' />
                     Urgente
                   </button>
-
+                  <button
+                    className='dashboard__status-item'
+                    onClick={() => handleStatusChange('review')}
+                  >
+                    <ButtonStatus status='review' size='md' />
+                    Analisar
+                  </button>
                   <button
                     className='dashboard__status-item'
                     onClick={() => handleStatusChange('completed')}

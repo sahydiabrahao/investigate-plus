@@ -48,18 +48,22 @@
   }
 
   &--none {
-    color: #c9ccd1;
+    color: $statusNull;
   }
 
   &--urgent {
-    color: #ff6b6b;
+    color: $statusUrgent;
   }
 
   &--completed {
-    color: #16c784;
+    color: $statusCompleted;
   }
 
   &--waiting {
-    color: #5ed0fa;
+    color: $statusWaiting;
+  }
+
+  &--review {
+    color: $statusReview;
   }
 }

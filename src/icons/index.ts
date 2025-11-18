@@ -14,3 +14,4 @@ export * from './null-icon';
 export * from './list-icon';
 export * from './collapse-icon';
 export * from './expand-icon';
+export * from './review-icon';

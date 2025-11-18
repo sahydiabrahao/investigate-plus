@@ -1,4 +1,4 @@
-export type CaseStatus = 'null' | 'waiting' | 'completed' | 'urgent';
+export type CaseStatus = 'null' | 'waiting' | 'completed' | 'urgent' | 'review';
 export interface CaseRecord {
   id: string;
   target: string;

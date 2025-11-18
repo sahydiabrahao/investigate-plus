@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { CaseStatus } from '@/types/json-default';
-import { WaitingIcon, CompletedIcon, UrgentIcon, NullIcon } from '@/icons';
+import { WaitingIcon, CompletedIcon, UrgentIcon, NullIcon, ReviewIcon } from '@/icons';
 import './ButtonStatus.scss';
 
 interface ButtonSatatusProps {
@@ -21,6 +21,7 @@ const iconMap: Record<CaseStatus, FC<{ size: number; color?: string }>> = {
   waiting: WaitingIcon,
   completed: CompletedIcon,
   urgent: UrgentIcon,
+  review: ReviewIcon,
 };
 
 const symbolColorMap: Record<CaseStatus, string> = {
@@ -28,6 +29,7 @@ const symbolColorMap: Record<CaseStatus, string> = {
   waiting: 'white',
   completed: 'white',
   urgent: 'white',
+  review: 'white',
 };
 
 export function ButtonStatus({
