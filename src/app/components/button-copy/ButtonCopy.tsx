@@ -21,6 +21,7 @@ export function ButtonCopy() {
     <div className='button-copy'>
       <ButtonText text='❌' size='sm' variant='filled' onClick={() => copy('[❌]')} />
       <ButtonText text='🕒' size='sm' variant='filled' onClick={() => copy('[🕒]')} />
+      <ButtonText text='🔍' size='sm' variant='filled' onClick={() => copy('[🔍]')} />
       <ButtonText text='✔️' size='sm' variant='filled' onClick={() => copy('[✔️]')} />
     </div>
   );
