@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CaseRecord } from '@/types/json-default';
-import { ButtonText } from '@/app/components/button-text/ButtonText';
+import { ButtonText, EditorWithToolbar } from '@/app/components';
 import './RecordCard.scss';
 
 type RecordCardProps = {
@@ -14,9 +14,9 @@ type RecordCardProps = {
   onOpenReference?: (fileName: string) => void;
 };
 
-type ActiveReference = {
+type ActiveLink = {
   index: number;
-  startIndex: number;
+  rect: DOMRect;
 } | null;
 
 export function RecordCard({
@@ -31,14 +31,11 @@ export function RecordCard({
 }: RecordCardProps) {
   const [collapsed, setCollapsed] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeRef, setActiveRef] = useState<ActiveReference>(null);
-  const [linkPos, setLinkPos] = useState<{ top: number; left: number } | null>(null);
+
+  const [activeLink, setActiveLink] = useState<ActiveLink>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const detailsRef = useRef<HTMLTextAreaElement | null>(null);
-  const mirrorWrapperRef = useRef<HTMLDivElement | null>(null);
-  const markerRef = useRef<HTMLSpanElement | null>(null);
 
   const [linkFiles, setLinkFiles] = useState<string[]>(record.linkFiles ?? []);
 
@@ -52,17 +49,6 @@ export function RecordCard({
   const handleTarget = (e: React.ChangeEvent<HTMLInputElement>) =>
     update({ target: e.target.value });
 
-  function autoResize(textarea: HTMLTextAreaElement) {
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
-  }
-
-  const handleDetails = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    autoResize(e.target);
-    update({ details: e.target.value });
-    updateActiveReference();
-  };
-
   useEffect(() => {
     const matches = record.details.match(/\[🔗\]/g) ?? [];
     const count = matches.length;
@@ -71,70 +57,31 @@ export function RecordCard({
       const next = [...prev];
       while (next.length < count) next.push('');
       if (next.length > count) next.length = count;
-      if (next.length !== prev.length) update({ linkFiles: next });
+
+      if (next.length !== (record.linkFiles ?? []).length) {
+        update({ linkFiles: next });
+      }
+
       return next;
     });
-  }, [record.details]);
+  }, [record.details, record.linkFiles, update]);
 
   useEffect(() => {
     setLinkFiles(record.linkFiles ?? []);
-  }, []);
-
-  function updateActiveReference() {
-    const el = detailsRef.current;
-    if (!el) {
-      setActiveRef(null);
-      return;
-    }
-
-    const value = el.value;
-    const cursor = el.selectionStart ?? 0;
-
-    const regex = /\[🔗\]/g;
-    let match: RegExpExecArray | null = null;
-    let index = 0;
-    let found: ActiveReference = null;
-
-    while ((match = regex.exec(value))) {
-      const start = match.index;
-      const end = start + match[0].length;
-
-      if (cursor >= start && cursor <= end) {
-        found = { index, startIndex: end };
-        break;
-      }
-
-      index++;
-    }
-
-    setActiveRef(found);
-  }
+  }, [record.linkFiles]);
 
   useEffect(() => {
-    if (!activeRef || !mirrorWrapperRef.current || !markerRef.current) {
-      setLinkPos(null);
-      return;
-    }
-
-    const wrapperRect = mirrorWrapperRef.current.getBoundingClientRect();
-    const markerRect = markerRef.current.getBoundingClientRect();
-
-    setLinkPos({
-      top: markerRect.top - wrapperRect.top,
-      left: markerRect.left - wrapperRect.left,
-    });
-  }, [activeRef, record.details]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutsideMenu(event: MouseEvent) {
       if (!menuRef.current) return;
       if (!menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
       }
     }
 
-    if (menuOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutsideMenu);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutsideMenu);
   }, [menuOpen]);
 
   const handleDelete = () => {
@@ -154,17 +101,15 @@ export function RecordCard({
     setMenuOpen(false);
   };
 
-  const handleOpenReference = () => {
-    if (!activeRef) return;
-
-    const currentFileName = linkFiles[activeRef.index] || '';
+  const handleOpenReference = (index: number) => {
+    const currentFileName = linkFiles[index] || '';
 
     if (!currentFileName) {
       const name = window.prompt('Informe o nome do arquivo (ex: arquivo.pdf):');
       if (!name) return;
 
       const next = [...linkFiles];
-      next[activeRef.index] = name.trim();
+      next[index] = name.trim();
       setLinkFiles(next);
       update({ linkFiles: next });
 
@@ -177,9 +122,14 @@ export function RecordCard({
 
   useEffect(() => {
     function handleClickOutsideCard(event: MouseEvent) {
+      const target = event.target as Element | null;
+      if (target?.closest('.record-card__link-hint')) {
+        return;
+      }
+
       if (!containerRef.current) return;
       if (!containerRef.current.contains(event.target as Node)) {
-        setActiveRef(null);
+        setActiveLink(null);
       }
     }
 
@@ -187,14 +137,8 @@ export function RecordCard({
     return () => document.removeEventListener('mousedown', handleClickOutsideCard);
   }, []);
 
-  const mirrorPrefix =
-    activeRef && activeRef.startIndex >= 0 ? record.details.slice(0, activeRef.startIndex) : '';
-
-  useLayoutEffect(() => {
-    if (!collapsed && detailsRef.current) autoResize(detailsRef.current);
-  }, [collapsed, record.details]);
-
-  const currentFileName = activeRef && linkFiles[activeRef.index] ? linkFiles[activeRef.index] : '';
+  const currentFileName =
+    activeLink && linkFiles[activeLink.index] ? linkFiles[activeLink.index] : '';
 
   return (
     <article className='record-card' ref={containerRef}>
@@ -258,38 +202,31 @@ export function RecordCard({
       </div>
 
       {!collapsed && (
-        <div className='record-card__section' ref={mirrorWrapperRef}>
-          <textarea
-            ref={detailsRef}
-            className='record-card__details'
-            value={record.details}
-            onChange={handleDetails}
-            onClick={updateActiveReference}
-            onKeyUp={updateActiveReference}
-            onSelect={updateActiveReference}
+        <div className='record-card__section'>
+          <EditorWithToolbar
+            plainValue={record.details}
+            richValue={record.detailsRich}
+            onChange={(plain, rich) => update({ details: plain, detailsRich: rich })}
             placeholder='[✔️] # TÍTULO: Descrição; Use [🔗] para links.'
-            rows={1}
+            onActiveLinkChange={setActiveLink}
           />
-
-          {activeRef && (
-            <div className='record-card__details-mirror' aria-hidden='true'>
-              {mirrorPrefix}
-              <span ref={markerRef} />
-            </div>
-          )}
-
-          {activeRef && linkPos && (
-            <button
-              type='button'
-              className='record-card__link-hint'
-              style={{ top: linkPos.top, left: linkPos.left }}
-              onClick={handleOpenReference}
-              title={currentFileName ? `Abrir "${currentFileName}"` : 'Definir arquivo'}
-            >
-              🔗 {currentFileName ? 'Abrir' : 'Definir arquivo'}
-            </button>
-          )}
         </div>
+      )}
+
+      {activeLink && (
+        <button
+          type='button'
+          className='record-card__link-hint'
+          style={{
+            position: 'fixed',
+            top: activeLink.rect.bottom - 16,
+            left: activeLink.rect.right + 2,
+          }}
+          onClick={() => handleOpenReference(activeLink.index)}
+          title={currentFileName ? `Abrir "${currentFileName}"` : 'Definir arquivo'}
+        >
+          🔗 {currentFileName ? 'Abrir' : 'Definir arquivo'}
+        </button>
       )}
     </article>
   );

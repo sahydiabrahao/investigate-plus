@@ -4,6 +4,7 @@ export interface CaseRecord {
   id: string;
   target: string;
   details: string;
+  detailsRich?: string | null;
   linkFiles?: string[];
 }
 
@@ -80,6 +81,7 @@ export function normalizeCaseJson(raw: Partial<CaseJson>): CaseJson {
           id: r.id ?? crypto.randomUUID(),
           target: r.target ?? '',
           details: r.details ?? '',
+          detailsRich: r.detailsRich ?? null,
           linkFiles: Array.isArray(r.linkFiles) ? r.linkFiles : empty.linkFiles,
         };
       })

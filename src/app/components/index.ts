@@ -10,3 +10,6 @@ export * from './tree-panel/TreePanel';
 export * from './tree-view/TreeView';
 export * from './sidebar/Sidebar';
 export * from './case-card/CaseCard';
+export * from './base-editor/BaseEditor';
+export * from './editor-with-toolbar/EditorWithToolbar';
+export * from './link-plugin/LinkPlugin';
