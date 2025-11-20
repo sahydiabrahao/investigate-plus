@@ -10,26 +10,32 @@
   &__sidebar {
     background: $backgroundDark;
     color: $textLight;
+
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 1rem;
-    gap: 1.5rem;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+    padding-top: $s16;
+    gap: calc(#{$s16} * 1.5);
+
+    border-right: 1px solid rgba($white, 0.08);
   }
 
   &__menu {
     background: $backgroundDark;
     color: $textLight;
+
     display: flex;
     flex-direction: column;
+
     overflow-y: auto;
     overflow-x: hidden;
   }
 
   &__content {
-    padding: 1.5rem;
+    padding: $s24;
     overflow-y: auto;
+
     color: $textDark;
     background: $backgroundLight;
   }

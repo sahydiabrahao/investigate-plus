@@ -3,7 +3,7 @@
 .tree {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: $s2;
   width: 100%;
   font-size: $fontSizeSm;
   color: $textLight;
@@ -14,7 +14,7 @@
 
   &__empty {
     font-size: $fontSizeSm;
-    padding: 4px 4px;
-    color: $textMutedLight;
+    padding: $s4 $s4;
+    color: rgba($textLight, 0.72);
   }
 }

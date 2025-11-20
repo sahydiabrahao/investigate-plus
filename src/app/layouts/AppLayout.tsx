@@ -1,7 +1,7 @@
 import { Menu } from '@/app/components/menu/Menu';
 import { Sidebar } from '@/app/components/sidebar/Sidebar';
 import Dashboard from '@/app/pages/dashboard/Dashboard';
-import Overview from '@/app/pages/overview/OverView';
+import Overview from '@/app/pages/overview/Overview';
 import { useCaseContext } from '@/context/CaseContext';
 import './AppLayout.scss';
 

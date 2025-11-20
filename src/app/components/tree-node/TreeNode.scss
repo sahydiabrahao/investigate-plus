@@ -9,24 +9,24 @@
   &__row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: $s6;
     height: 24px;
-    padding: 2px 4px;
+    padding: $s2 $s4;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: $s4;
 
     &:hover {
       background: $hoverLight;
     }
+  }
 
-    &__status {
-      margin-left: 4px;
-    }
+  &__status {
+    margin-left: $s4;
   }
 
   &__expander {
-    width: 16px;
-    height: 16px;
+    width: $s16;
+    height: $s16;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -41,20 +41,20 @@
     }
 
     &--placeholder {
-      width: 16px;
-      height: 16px;
+      width: $s16;
+      height: $s16;
       opacity: 0;
       pointer-events: none;
     }
 
     &:hover {
-      color: $hoverMenuText;
+      color: $hoverTextLight;
     }
   }
 
   &__icon {
-    width: 16px;
-    height: 16px;
+    width: $s16;
+    height: $s16;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -68,7 +68,7 @@
     background: none;
     border: none;
     color: $textLight;
-    font-size: fonSize;
+    font-size: $fontSizeSm;
     padding: 0;
     cursor: pointer;
     text-align: left;
@@ -78,7 +78,7 @@
     text-overflow: ellipsis;
 
     &:hover {
-      color: $hoverMenuText;
+      color: $hoverTextLight;
     }
   }
 

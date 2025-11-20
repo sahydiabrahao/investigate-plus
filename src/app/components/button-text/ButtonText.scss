@@ -5,17 +5,17 @@
   align-items: center;
   justify-content: center;
 
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: $s6 $s12;
+  border-radius: $s6;
   cursor: pointer;
 
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: $fontSizeMd;
+  font-weight: $fontWeightRegular;
 
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
+    background $transition,
+    border-color $transition,
+    transform $transition;
 
   &--filled {
     background: $buttonDark;
@@ -49,16 +49,16 @@
 
   &--sm {
     font-size: $fontSizeSm;
-    padding: 4px 8px;
+    padding: $s4 $s8;
   }
 
   &--md {
     font-size: $fontSizeMd;
-    padding: 6px 12px;
+    padding: $s6 $s12;
   }
 
   &--lg {
     font-size: $fontSizeLg;
-    padding: 8px 14px;
+    padding: $s8 $s14;
   }
 }

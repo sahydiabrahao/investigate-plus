@@ -1,16 +1,32 @@
-$backgroundDark: #111827;
-$backgroundLight: #f6f7fb;
+$white: #ffffff;
+$grayLightness: #f3f4f6;
+$grayLight: #e5e7eb;
+$gray: #9ca3af;
+$grayDark: #4b5563;
+$grayDarkness: #111827;
+$black: #000000;
 
-$textLight: #ffffff;
-$textDark: #111827;
-$textMutedLight: rgba(255, 255, 255, 0.72);
+$backgroundWhite: $white;
+$backgroundLight: $grayLightness;
+$backgroundDark: $grayDarkness;
 
-$buttonLight: #ffffff;
+$textLight: $white;
+$textDark: $grayDarkness;
+
+$buttonLight: $white;
 $buttonDark: #1f2937;
 
-$hoverLight: rgba(255, 255, 255, 0.06);
-$hoverDark: #374151;
-$hoverMenuText: #eab308;
+$hoverLight: rgba($white, 0.06);
+$hoverDark: rgba($black, 0.16);
+
+$hoverTextLight: #eab308;
+$hoverTextDark: #eab308;
+
+$colorYellow: #facc15;
+$colorBlue: #3b82f6;
+$colorRed: #ef4444;
+$colorGreen: #22c55e;
+$colorNone: $textDark;
 
 $statusNull: #c9ccd1;
 $statusUrgent: #ff6b6b;
@@ -24,6 +40,26 @@ $fontSizeLg: 18px;
 
 $fontWeightRegular: 400;
 $fontWeightBold: 700;
+
+$s0: 0;
+$s2: 2px;
+$s4: 4px;
+$s6: 6px;
+$s8: 8px;
+$s10: 10px;
+$s12: 12px;
+$s14: 14px;
+$s16: 16px;
+$s20: 20px;
+$s22: 22px;
+$s24: 24px;
+$s28: 28px;
+$s32: 32px;
+$s40: 40px;
+
+$shadow: 0 2px 4px rgba($black, 0.06);
+
+$transition: 0.12s ease;
 
 .text {
   font-size: $fontSizeSm;

@@ -1,0 +1,113 @@
+@use '@/styles/global' as *;
+
+.text-editor-toolbar {
+  position: absolute;
+  right: -12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: $s2;
+
+  button {
+    background: $backgroundWhite;
+    color: $textDark;
+    border: 1px solid $grayLight;
+    width: 28px;
+    height: 24px;
+    border-radius: $s6;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition:
+      background $transition,
+      box-shadow $transition,
+      transform $transition,
+      border-color $transition;
+
+    &:hover {
+      border-color: $gray;
+      transform: translateY(-1px);
+      box-shadow: $shadow;
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+  }
+
+  &__dropdown {
+    position: relative;
+  }
+
+  &__trigger {
+    width: 28px;
+    height: 24px;
+    padding: 0;
+  }
+
+  &__menu {
+    position: absolute;
+    top: 50%;
+    left: -8px;
+    transform: translate(-100%, -50%);
+    margin-top: 0;
+    padding: $s6;
+
+    display: flex;
+    flex-direction: column;
+    gap: $s4;
+
+    background: $backgroundWhite;
+    border-radius: $s6;
+    border: 1px solid $grayLight;
+    box-shadow: $shadow;
+    z-index: 10;
+
+    .text-editor-toolbar__swatch {
+      border-radius: 999px;
+      padding: 0;
+      width: 14px;
+      height: 14px;
+      border: 1px solid $grayLight;
+
+      transition:
+        transform $transition,
+        box-shadow $transition,
+        border-color $transition;
+
+      &:hover {
+        transform: scale(1.25);
+        box-shadow: 0 0 6px rgba($black, 0.15);
+        border-color: $gray;
+      }
+
+      &:active {
+        transform: scale(1.1);
+      }
+    }
+
+    .text-editor-toolbar__swatch--yellow {
+      background: $colorYellow;
+    }
+
+    .text-editor-toolbar__swatch--blue {
+      background: $colorBlue;
+    }
+
+    .text-editor-toolbar__swatch--red {
+      background: $colorRed;
+    }
+
+    .text-editor-toolbar__swatch--green {
+      background: $colorGreen;
+    }
+
+    .text-editor-toolbar__swatch--reset {
+      background: $textDark;
+    }
+  }
+}

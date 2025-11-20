@@ -25,7 +25,6 @@ export function Sidebar() {
   return (
     <div className='sidebar'>
       <ButtonIcon icon={ListIcon} size='lg' onClick={() => setViewMode('overview')} />
-
       <ButtonIcon icon={RefreshIcon} onClick={handleRefreshTree} size='lg' />
       <ButtonIcon icon={ImportIcon} onClick={importFolder} size='lg' />
       <ButtonIcon icon={FileJsonIcon} onClick={createJsonFile} size='lg' />

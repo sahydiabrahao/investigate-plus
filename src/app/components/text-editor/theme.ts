@@ -1,4 +1,4 @@
-export const lexicalTheme = {
+export const THEME = {
   paragraph: 'lexical-paragraph',
   text: {
     bold: 'lexical-text-bold',

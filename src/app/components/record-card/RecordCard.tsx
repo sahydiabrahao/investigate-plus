@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CaseRecord } from '@/types/json-default';
-import { ButtonText, EditorWithToolbar } from '@/app/components';
+import { ButtonText, TextEditorWithToolbar } from '@/app/components';
 import './RecordCard.scss';
 
 type RecordCardProps = {
@@ -203,7 +203,7 @@ export function RecordCard({
 
       {!collapsed && (
         <div className='record-card__section'>
-          <EditorWithToolbar
+          <TextEditorWithToolbar
             plainValue={record.details}
             richValue={record.detailsRich}
             onChange={(plain, rich) => update({ details: plain, detailsRich: rich })}

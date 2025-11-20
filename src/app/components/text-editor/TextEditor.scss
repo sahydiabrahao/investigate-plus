@@ -1,0 +1,48 @@
+@use '@/styles/global' as *;
+
+.lexical-paragraph {
+  @extend .text;
+  margin: 0;
+}
+
+.lexical-text-bold {
+  @extend .text-bold;
+  font-weight: $fontWeightBold !important;
+}
+
+.lexical-text-italic {
+  font-style: italic;
+}
+
+.lexical-text-underline {
+  text-decoration: underline;
+}
+
+.text-editor {
+  position: relative;
+  padding-right: calc(#{$s16} + #{$s4});
+}
+
+.text-editor__content {
+  padding: $s8;
+  padding-top: 0;
+  min-height: 42px;
+  font-size: $fontSizeSm;
+  color: $textDark;
+  outline: none;
+  white-space: pre-wrap;
+}
+
+.text-editor__content:focus {
+  border-color: $hoverTextDark;
+}
+
+.text-editor__placeholder {
+  color: rgba($textDark, 0.6);
+  pointer-events: none;
+  font-size: $fontSizeSm;
+
+  position: absolute;
+  top: 0;
+  left: $s8;
+}

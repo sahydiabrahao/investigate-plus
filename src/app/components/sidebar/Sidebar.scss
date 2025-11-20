@@ -4,18 +4,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  padding-top: 16px;
+
+  gap: $s24;
+  padding-top: $s16;
+
   background: $backgroundDark;
   color: $textLight;
-
-  &__item {
-    font-size: 22px;
-    cursor: pointer;
-    opacity: 0.6;
-
-    &:hover {
-      opacity: 1;
-    }
-  }
 }

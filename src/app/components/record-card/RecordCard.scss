@@ -2,25 +2,25 @@
 
 .record-card {
   position: relative;
-  padding: 2px 0 2px 8px;
-  background-color: #ffffff;
+  padding: $s2 0 $s2 $s8;
+  background-color: $backgroundWhite;
 }
 
 .record-card::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 0px;
-  bottom: 0px;
+  top: 0;
+  bottom: 0;
   width: 3px;
-  border-radius: 6px;
+  border-radius: $s6;
   background: $textDark;
 }
 
 .record-card__header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $s8;
   width: 100%;
 }
 
@@ -31,10 +31,10 @@
 
 .record-card__target {
   flex: 1;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  padding: $s6 $s8;
+  border-radius: $s6;
+  border: 1px solid rgba($white, 0.12);
+  background: rgba($white, 0.04);
   font-size: $fontSizeSm;
   color: inherit;
 }
@@ -42,7 +42,7 @@
 .record-card__header-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: $s4;
 }
 
 .record-card__menu {
@@ -57,19 +57,19 @@
   right: 0;
 
   min-width: 150px;
-  padding: 6px 0;
+  padding: $s6 0;
 
-  border-radius: 6px;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  border-radius: $s6;
+  background: rgba($grayDarkness, 0.95);
+  border: 1px solid rgba($white, 0.12);
+  box-shadow: 0 4px 16px rgba($black, 0.35);
 
   z-index: 30;
 }
 
 .record-card__menu-item {
   width: 100%;
-  padding: 6px 12px;
+  padding: $s6 $s12;
 
   font-size: $fontSizeSm;
   color: $textLight;
@@ -81,10 +81,10 @@
 
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $s6;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: $hoverLight;
   }
 
   &:disabled {
@@ -97,23 +97,23 @@
   color: $statusUrgent;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.15);
+    background: rgba($colorRed, 0.15);
   }
 }
 
 .record-card__section {
   position: relative;
-  padding-right: 12px;
-  margin-top: 6px;
+  padding-right: $s12;
+  margin-top: $s6;
 }
 
 .record-card__details {
   width: 100%;
-  padding: 6px 8px;
+  padding: $s6 $s8;
   font-size: $fontSizeSm;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: $s6;
+  border: 1px solid rgba($white, 0.12);
+  background: rgba($white, 0.04);
   color: inherit;
   resize: none;
   overflow: hidden;
@@ -122,7 +122,7 @@
 .record-card__details-mirror {
   position: absolute;
   inset: 0;
-  padding: 6px 8px;
+  padding: $s6 $s8;
   font-size: $fontSizeSm;
   font-family: inherit;
   line-height: 1.4;
@@ -138,24 +138,24 @@
   position: absolute;
   transform: translateY(-100%);
 
-  padding: 4px 10px;
+  padding: $s4 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba($white, 0.18);
+  background: rgba($grayDarkness, 0.96);
 
   font-size: $fontSizeSm;
   color: $textLight;
 
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: $s4;
 
   cursor: pointer;
   white-space: nowrap;
 
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
+    background $transition,
+    border-color $transition,
     transform 0.1s ease;
 
   &:hover {

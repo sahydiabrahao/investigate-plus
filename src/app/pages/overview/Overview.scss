@@ -3,14 +3,14 @@
 .overview {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $s8;
   width: 100%;
 }
 
 .overview__header {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $s4;
   width: 100%;
 }
 
@@ -28,5 +28,5 @@
 .overview__grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $s8;
 }

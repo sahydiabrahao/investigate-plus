@@ -5,21 +5,21 @@
   flex-direction: column;
   width: 100%;
   color: $textLight;
-  padding: 16px 12px;
-  gap: 16px;
+  padding: $s16 $s12;
+  gap: $s16;
 }
 
 .menu__actions {
   display: flex;
   flex-direction: row;
-  gap: 12px;
+  gap: $s12;
   align-items: center;
 }
 
 .menu__label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $s8;
   font-size: $fontSizeSm;
   font-weight: $fontWeightBold;
   opacity: 0.9;
@@ -32,15 +32,15 @@
 .menu__list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $s6;
 }
 
 .menu__item {
   font-size: $fontSizeSm;
   opacity: 0.9;
   cursor: pointer;
-  padding: 6px 4px;
-  border-radius: 4px;
+  padding: $s6 $s4;
+  border-radius: $s4;
 
   &:hover {
     background: $hoverLight;

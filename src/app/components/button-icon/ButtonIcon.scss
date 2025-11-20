@@ -4,17 +4,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
+
+  padding: $s6;
+  border-radius: $s6;
 
   color: $buttonLight;
 
   transition:
-    background 0.15s ease,
-    transform 0.15s ease;
+    background $transition,
+    transform $transition;
 
   &:hover {
     background: $hoverLight;
@@ -31,17 +33,17 @@
   }
 
   &--sm {
-    width: 24px;
-    height: 24px;
+    width: $s24;
+    height: $s24;
   }
 
   &--md {
-    width: 32px;
-    height: 32px;
+    width: $s32;
+    height: $s32;
   }
 
   &--lg {
-    width: 40px;
-    height: 40px;
+    width: $s40;
+    height: $s40;
   }
 }

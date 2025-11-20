@@ -3,13 +3,13 @@
 .dashboard {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $s8;
 }
 
 .dashboard__header {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $s4;
 }
 
 .dashboard__header-row {
@@ -22,7 +22,7 @@
 .dashboard__header-title-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $s8;
 }
 
 .dashboard__status-wrapper {
@@ -33,21 +33,21 @@
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 4px;
+  margin-top: $s4;
 
-  padding: 4px 0;
+  padding: $s4 0;
   min-width: 160px;
 
-  border-radius: 6px;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  border-radius: $s6;
+  background: rgba($grayDarkness, 0.95);
+  border: 1px solid rgba($white, 0.12);
+  box-shadow: 0 4px 16px rgba($black, 0.35);
   z-index: 10;
 }
 
 .dashboard__status-item {
   width: 100%;
-  padding: 6px 12px;
+  padding: $s6 $s12;
 
   font-size: $fontSizeSm;
   color: $textLight;
@@ -59,10 +59,10 @@
 
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $s6;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: $hoverLight;
   }
 
   &:disabled {
@@ -74,7 +74,7 @@
 .dashboard__header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $s8;
 }
 
 .dashboard__title {
@@ -84,14 +84,14 @@
 
 .dashboard__meta {
   display: flex;
-  gap: 16px;
+  gap: $s16;
   align-items: center;
 }
 
 .meta-field {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $s6;
   font-size: $fontSizeMd;
   opacity: 0.9;
 }
@@ -102,11 +102,11 @@
 }
 
 .meta-field__input {
-  padding: 6px 8px;
+  padding: $s6 $s8;
   font-size: $fontSizeMd;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: $s6;
+  border: 1px solid rgba($white, 0.12);
+  background: rgba($white, 0.04);
   color: inherit;
   resize: none;
   overflow: hidden;
@@ -114,11 +114,11 @@
 
 .meta-field__text-area {
   width: 100%;
-  padding: 6px 8px;
+  padding: $s6 $s8;
   font-size: $fontSizeMd;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: $s6;
+  border: 1px solid rgba($white, 0.12);
+  background: rgba($white, 0.04);
   color: inherit;
   resize: vertical;
   overflow: hidden;
@@ -126,25 +126,25 @@
 }
 
 .dashboard__section {
-  margin-top: 8px;
+  margin-top: $s8;
 }
 
 .dashboard__section-title {
   font-size: $fontSizeMd;
-  margin-bottom: 8px;
+  margin-bottom: $s8;
 }
 
 .dashboard__section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: $s8;
 }
 
 .dashboard__section-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $s8;
 }
 
 .dashboard__muted {
@@ -158,23 +158,5 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard__record {
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.02);
-}
-
-.dashboard__record-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  opacity: 0.9;
-}
-
-.dashboard__record-value {
-  margin-top: 4px;
-  font-size: 13px;
+  gap: $s8;
 }

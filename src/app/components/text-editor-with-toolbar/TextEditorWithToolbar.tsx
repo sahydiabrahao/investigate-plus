@@ -1,4 +1,4 @@
-import { ActiveLinkData, BaseEditor } from '@/app/components';
+import { ActiveLinkData, TextEditor } from '@/app/components';
 
 type Props = {
   plainValue: string;
@@ -8,7 +8,7 @@ type Props = {
   onActiveLinkChange?: (data: ActiveLinkData | null) => void;
 };
 
-export function EditorWithToolbar({
+export function TextEditorWithToolbar({
   plainValue,
   richValue,
   onChange,
@@ -16,7 +16,7 @@ export function EditorWithToolbar({
   onActiveLinkChange,
 }: Props) {
   return (
-    <BaseEditor
+    <TextEditor
       plainValue={plainValue}
       richValue={richValue}
       onChange={onChange}
