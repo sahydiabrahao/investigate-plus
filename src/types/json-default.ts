@@ -55,7 +55,7 @@ export function createNewCase(caseId: string): CaseJson {
     case: {
       id: caseId,
       title: 'TÍTULO',
-      crime: 'FATO',
+      crime: 'CRIME',
       victim: 'NOME',
       date: 'XX/XX/XXXX',
       notes: 'ANOTAÇÕES',
