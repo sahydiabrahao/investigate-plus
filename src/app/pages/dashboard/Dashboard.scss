@@ -101,17 +101,6 @@
   color: $textDark;
 }
 
-.meta-field__input {
-  padding: $s6 $s8;
-  font-size: $fontSizeMd;
-  border-radius: $s6;
-  border: 1px solid rgba($white, 0.12);
-  background: rgba($white, 0.04);
-  color: inherit;
-  resize: none;
-  overflow: hidden;
-}
-
 .meta-field__text-area {
   width: 100%;
   padding: $s6 $s8;
@@ -122,7 +111,16 @@
   color: inherit;
   resize: vertical;
   overflow: hidden;
-  min-height: 14px;
+  min-height: 16px;
+}
+
+.meta-field__text-area--single {
+  width: auto;
+  min-width: 80px;
+  resize: none;
+  overflow: hidden;
+  white-space: nowrap;
+  height: 16px;
 }
 
 .dashboard__section {

@@ -133,6 +133,11 @@ export default function Dashboard() {
     el.style.height = el.scrollHeight + 'px';
   }
 
+  function autoResizeHorizontal(el: HTMLTextAreaElement) {
+    el.style.width = '1px';
+    el.style.width = el.scrollWidth + 2 + 'px';
+  }
+
   const handleMoveRecord = (fromIndex: number, toIndex: number) => {
     setEditableCase((prev) => {
       if (!prev) return prev;
@@ -271,31 +276,39 @@ export default function Dashboard() {
         <div className='dashboard__meta'>
           <label className='meta-field'>
             <h2 className='meta-field__label'>Data:</h2>
-            <input
-              className='meta-field__input'
+            <textarea
+              className='meta-field__text-area meta-field__text-area--single'
               value={editableCase.case.date}
-              onChange={(e) => handleMetadataChange('date', e.target.value)}
-              placeholder='XX/XX/XXXX'
-              size={Math.max((editableCase.case.date.length || 1) + 1, 8)}
+              onChange={(e) => {
+                handleMetadataChange('date', e.target.value);
+                autoResizeHorizontal(e.target);
+              }}
+              rows={1}
             />
 
             <label className='meta-field'>
               <h2 className='meta-field__label'>Crime:</h2>
-              <input
-                className='meta-field__input'
+              <textarea
+                className='meta-field__text-area meta-field__text-area--single'
                 value={editableCase.case.crime}
-                onChange={(e) => handleMetadataChange('crime', e.target.value)}
-                size={Math.max((editableCase.case.crime.length || 1) + 1, 8)}
+                onChange={(e) => {
+                  handleMetadataChange('crime', e.target.value);
+                  autoResizeHorizontal(e.target);
+                }}
+                rows={1}
               />
             </label>
 
             <label className='meta-field'>
               <h2 className='meta-field__label'>Vítima:</h2>
-              <input
-                className='meta-field__input'
+              <textarea
+                className='meta-field__text-area meta-field__text-area--single'
                 value={editableCase.case.victim}
-                onChange={(e) => handleMetadataChange('victim', e.target.value)}
-                size={Math.max((editableCase.case.victim.length || 1) + 1, 8)}
+                onChange={(e) => {
+                  handleMetadataChange('victim', e.target.value);
+                  autoResizeHorizontal(e.target);
+                }}
+                rows={1}
               />
             </label>
           </label>
