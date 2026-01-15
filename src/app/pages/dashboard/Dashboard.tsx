@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [originalCase, setOriginalCase] = useState<CaseJson | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
   const statusRef = useRef<HTMLDivElement | null>(null);
+  const notesRef = useRef<HTMLTextAreaElement | null>(null);
 
   const hasChanges =
     editableCase && originalCase
@@ -64,6 +65,11 @@ export default function Dashboard() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!notesRef.current) return;
+    requestAnimationFrame(() => autoResize(notesRef.current!));
+  }, [editableCase?.case.notes]);
 
   if (!selectedCaseHandle) {
     return (
@@ -326,13 +332,14 @@ export default function Dashboard() {
         <label className='meta-field'>
           <h2 className='meta-field__label'>Anotações:</h2>
           <textarea
+            ref={notesRef}
             className='meta-field__text-area'
             value={editableCase.case.notes}
             onChange={(e) => {
               handleMetadataChange('notes', e.target.value);
-              autoResize(e.target);
+              autoResize(e.currentTarget);
             }}
-            rows={1}
+            onInput={(e) => autoResize(e.currentTarget)}
           />
         </label>
       </header>
