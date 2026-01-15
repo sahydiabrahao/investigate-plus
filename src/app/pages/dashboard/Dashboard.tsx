@@ -218,6 +218,14 @@ export default function Dashboard() {
 
                   <button
                     className='dashboard__status-item'
+                    onClick={() => handleStatusChange('incomplete')}
+                  >
+                    <ButtonStatus status='incomplete' size='md' />
+                    Pendente
+                  </button>
+
+                  <button
+                    className='dashboard__status-item'
                     onClick={() => handleStatusChange('waiting')}
                   >
                     <ButtonStatus status='waiting' size='md' />

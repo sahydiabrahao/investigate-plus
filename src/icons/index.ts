@@ -15,3 +15,4 @@ export * from './list-icon';
 export * from './collapse-icon';
 export * from './expand-icon';
 export * from './review-icon';
+export * from './x-icon';
