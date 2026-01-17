@@ -6,6 +6,7 @@ import {
   CaseRecord,
   CaseStatus,
   createEmptyRecord,
+  normalizeCaseJson,
 } from '@/types/json-default';
 import {
   DashboardMessage,
@@ -43,12 +44,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (data) {
-      setEditableCase(data);
-      setOriginalCase(data);
+      // ✅ garante que registros antigos tenham linkFilesById inicializado
+      const normalized = normalizeCaseJson(data);
+
+      setEditableCase(normalized);
+      setOriginalCase(normalized);
 
       if (selectedCaseHandle) {
         const fileKey = selectedCaseHandle.name;
-        setStatus(fileKey, data.case.status);
+        setStatus(fileKey, normalized.case.status);
       }
     } else {
       setEditableCase(null);
