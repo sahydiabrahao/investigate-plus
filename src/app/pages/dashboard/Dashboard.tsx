@@ -19,7 +19,8 @@ import { findFileInTree } from '@/utils/find-file-in-tree';
 import { useCaseContext } from '@/context/CaseContext';
 
 export default function Dashboard() {
-  const { selectedCaseHandle, dirTree, setStatus } = useCaseContext();
+  // ✅ mudou: pegamos selectedCaseTree em vez de dirTree (para anexos)
+  const { selectedCaseHandle, selectedCaseTree, setStatus } = useCaseContext();
 
   const { data, loading, error } = useReadJsonFile({
     handle: selectedCaseHandle,
@@ -154,14 +155,15 @@ export default function Dashboard() {
   };
 
   async function handleOpenReference(fileName: string) {
-    if (!dirTree) {
-      alert('Nenhuma pasta carregada.');
+    // ✅ mudou: agora buscamos só dentro da pasta do caso selecionado
+    if (!selectedCaseTree) {
+      alert('Pasta do caso não encontrada.');
       return;
     }
 
-    const handle = findFileInTree(dirTree, fileName);
+    const handle = findFileInTree(selectedCaseTree, fileName);
     if (!handle) {
-      alert(`Arquivo não encontrado: ${fileName}`);
+      alert(`Arquivo não encontrado neste caso: ${fileName}`);
       return;
     }
 
