@@ -6,7 +6,18 @@ export interface CaseRecord {
   targetRich?: string | null;
   details: string;
   detailsRich?: string | null;
+
+  /**
+   * LEGADO (indexado). Mantido apenas por compatibilidade.
+   * A partir do Passo 2, novos links devem ser criados em linkFilesById.
+   */
   linkFiles?: string[];
+
+  /**
+   * NOVO (referência estável).
+   * refId -> fileName
+   */
+  linkFilesById?: Record<string, string>;
 }
 
 export interface CaseMetadata {
@@ -46,7 +57,12 @@ export function createEmptyRecord(): CaseRecord {
     targetRich: null,
     details: '',
     detailsRich: null,
+
+    // Mantém para não quebrar partes antigas do app
     linkFiles: [],
+
+    // Novo padrão: sempre inicializa
+    linkFilesById: {},
   };
 }
 
@@ -78,10 +94,20 @@ export function normalizeCaseJson(raw: Partial<CaseJson>): CaseJson {
     ? raw.records.map((r: Partial<CaseRecord>): CaseRecord => {
         const empty = createEmptyRecord();
 
+        const linkFiles = Array.isArray(r.linkFiles) ? r.linkFiles : empty.linkFiles;
+        const linkFilesById =
+          r.linkFilesById && typeof r.linkFilesById === 'object' && !Array.isArray(r.linkFilesById)
+            ? (r.linkFilesById as Record<string, string>)
+            : empty.linkFilesById;
+
         return {
           ...empty,
           ...r,
           id: r.id ?? crypto.randomUUID(),
+
+          // normalização explícita (sem migração automática)
+          linkFiles,
+          linkFilesById,
         };
       })
     : base.records;

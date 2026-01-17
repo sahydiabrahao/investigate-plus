@@ -15,9 +15,21 @@ type RecordCardProps = {
 };
 
 type ActiveLink = {
-  index: number;
+  refId: string;
   rect: DOMRect;
+  index?: number; // opcional: fallback/diagnóstico para legado
 } | null;
+
+function isLegacyRefId(refId: string) {
+  return refId.startsWith('legacy:');
+}
+
+function getLegacyIndex(refId: string): number | null {
+  if (!isLegacyRefId(refId)) return null;
+  const raw = refId.slice('legacy:'.length);
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
 
 export function RecordCard({
   record,
@@ -37,6 +49,7 @@ export function RecordCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  // LEGADO: ainda mantemos para não quebrar casos antigos
   const [linkFiles, setLinkFiles] = useState<string[]>(record.linkFiles ?? []);
 
   const update = useCallback(
@@ -46,6 +59,13 @@ export function RecordCard({
     [record, onChange]
   );
 
+  /**
+   * LEGADO: mantém o comportamento antigo (sincroniza quantidade de [🔗] com linkFiles[])
+   * Só roda quando o texto tiver tokens legado [🔗] sem id.
+   *
+   * Obs: Quando você começar a usar [🔗:<id>], esse contador legado vai deixar de ser
+   * a fonte de verdade para esses links.
+   */
   useEffect(() => {
     const matches = record.details.match(/\[🔗\]/g) ?? [];
     const count = matches.length;
@@ -98,17 +118,46 @@ export function RecordCard({
     setMenuOpen(false);
   };
 
-  const handleOpenReference = (index: number) => {
-    const currentFileName = linkFiles[index] || '';
+  const getCurrentFileName = (refId: string): string => {
+    // Novo padrão
+    const byId = record.linkFilesById?.[refId];
+    if (byId) return byId;
+
+    // Legado (quando o token não tem id)
+    const legacyIndex = getLegacyIndex(refId);
+    if (legacyIndex === null) return '';
+
+    return linkFiles[legacyIndex] || '';
+  };
+
+  const setFileNameForRefId = (refId: string, fileName: string) => {
+    const trimmed = fileName.trim();
+    if (!trimmed) return;
+
+    // Se for legado: mantém o comportamento antigo (por compat)
+    const legacyIndex = getLegacyIndex(refId);
+    if (legacyIndex !== null) {
+      const next = [...linkFiles];
+      next[legacyIndex] = trimmed;
+      setLinkFiles(next);
+      update({ linkFiles: next });
+      return;
+    }
+
+    // Novo: grava no dicionário por ID (fonte da verdade daqui pra frente)
+    const nextById = { ...(record.linkFilesById ?? {}) };
+    nextById[refId] = trimmed;
+    update({ linkFilesById: nextById });
+  };
+
+  const handleOpenReference = (refId: string) => {
+    const currentFileName = getCurrentFileName(refId);
 
     if (!currentFileName) {
       const name = window.prompt('Informe o nome do arquivo (ex: arquivo.pdf):');
       if (!name) return;
 
-      const next = [...linkFiles];
-      next[index] = name.trim();
-      setLinkFiles(next);
-      update({ linkFiles: next });
+      setFileNameForRefId(refId, name);
 
       onOpenReference?.(name.trim());
       return;
@@ -134,8 +183,7 @@ export function RecordCard({
     return () => document.removeEventListener('mousedown', handleClickOutsideCard);
   }, []);
 
-  const currentFileName =
-    activeLink && linkFiles[activeLink.index] ? linkFiles[activeLink.index] : '';
+  const currentFileName = activeLink ? getCurrentFileName(activeLink.refId) : '';
 
   return (
     <article className='record-card' ref={containerRef}>
@@ -220,7 +268,7 @@ export function RecordCard({
             top: activeLink.rect.bottom - 16,
             left: activeLink.rect.right + 2,
           }}
-          onClick={() => handleOpenReference(activeLink.index)}
+          onClick={() => handleOpenReference(activeLink.refId)}
           title={currentFileName ? `Abrir "${currentFileName}"` : 'Definir arquivo'}
         >
           🔗 {currentFileName ? 'Abrir' : 'Definir arquivo'}

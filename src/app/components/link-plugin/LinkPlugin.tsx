@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
 export type ActiveLinkData = {
-  index: number;
+  refId: string;
+  index?: number;
   rect: DOMRect;
 };
 
@@ -35,34 +36,40 @@ export function LinkPlugin({ onActiveLinkChange }: LinkPluginProps) {
       }
 
       const text = rootEl.textContent ?? '';
-
       const cursorPos = getCursorOffset(rootEl, range);
 
-      const regex = /\[🔗\]/g;
+      // ✅ base36 com 4 chars: [🔗:39w4]
+      // ✅ legado: [🔗]
+      const regex = /\[🔗(?::([a-z0-9]{4}))?\]/gi;
+
       let match: RegExpExecArray | null;
       let idx = 0;
-      let foundIndex: number | null = null;
 
       while ((match = regex.exec(text))) {
         const start = match.index;
         const end = start + match[0].length;
 
-        if (cursorPos >= start && cursorPos <= end) {
-          foundIndex = idx;
-          break;
+        if (cursorPos >= start && cursorPos < end) {
+          const refId = match[1];
+          const rect = range.cloneRange().getBoundingClientRect();
+
+          if (!refId) {
+            onActiveLinkChange?.({
+              refId: `legacy:${idx}`,
+              index: idx,
+              rect,
+            });
+            return;
+          }
+
+          onActiveLinkChange?.({ refId, index: idx, rect });
+          return;
         }
 
         idx++;
       }
 
-      if (foundIndex === null) {
-        onActiveLinkChange?.(null);
-        return;
-      }
-
-      const rect = range.getBoundingClientRect();
-
-      onActiveLinkChange?.({ index: foundIndex, rect });
+      onActiveLinkChange?.(null);
     });
   }, [editor, onActiveLinkChange]);
 

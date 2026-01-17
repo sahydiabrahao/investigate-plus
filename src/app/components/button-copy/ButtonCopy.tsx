@@ -16,6 +16,14 @@ function copy(text: string) {
   }
 }
 
+function createRefId(): string {
+  return Math.random().toString(36).slice(2, 6);
+}
+
+function createLinkTokenWithId(): string {
+  return `[🔗:${createRefId()}]`;
+}
+
 export function ButtonCopy() {
   return (
     <div className='button-copy'>
@@ -23,7 +31,12 @@ export function ButtonCopy() {
       <ButtonText text='🕒' size='sm' variant='filled' onClick={() => copy('[🕒]')} />
       <ButtonText text='🔍' size='sm' variant='filled' onClick={() => copy('[🔍]')} />
       <ButtonText text='✔️' size='sm' variant='filled' onClick={() => copy('[✔️]')} />
-      <ButtonText text='🔗' size='sm' variant='filled' onClick={() => copy('[🔗]')} />
+      <ButtonText
+        text='🔗'
+        size='sm'
+        variant='filled'
+        onClick={() => copy(createLinkTokenWithId())}
+      />
     </div>
   );
 }
