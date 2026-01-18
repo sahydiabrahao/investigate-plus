@@ -22,7 +22,6 @@ type TreeNodeProps = {
   expanded: Set<string>;
   onToggle: (path: string) => void;
 
-  // ✅ mudou: agora passa também o caminho do diretório pai do arquivo clicado
   onFileClick?: (handle: FileSystemFileHandle, parentDirPath: string | null) => void;
 
   onDirClick?: (node: DirNode) => void;
@@ -49,7 +48,6 @@ function getFileIconByName(name: string): FC<{ size?: number; color?: string }> 
   return FilePdfIcon;
 }
 
-// ✅ helper: pega o diretório pai de um path tipo "a/b/c.json" -> "a/b"
 function getParentDirPath(path: string): string | null {
   const idx = path.lastIndexOf('/');
   if (idx <= 0) return null;
@@ -80,7 +78,6 @@ export function TreeNode({
 
     if (!onFileClick) return;
 
-    // ✅ novo: quando clicar num arquivo, mandamos também a pasta pai
     const parentDirPath = getParentDirPath(node.path);
     onFileClick(node.handle, parentDirPath);
   };
@@ -94,7 +91,7 @@ export function TreeNode({
     const baseName = node.name;
     const caseJsonChild = node.children.find(
       (child) =>
-        child.type === 'file' && child.name.toLowerCase() === `${baseName.toLowerCase()}.json`
+        child.type === 'file' && child.name.toLowerCase() === `${baseName.toLowerCase()}.json`,
     );
 
     if (caseJsonChild) {

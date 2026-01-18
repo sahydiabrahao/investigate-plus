@@ -56,16 +56,9 @@ export function RecordCard({
     (patch: Partial<CaseRecord>) => {
       onChange?.({ ...record, ...patch });
     },
-    [record, onChange]
+    [record, onChange],
   );
 
-  /**
-   * LEGADO: mantém o comportamento antigo (sincroniza quantidade de [🔗] com linkFiles[])
-   * Só roda quando o texto tiver tokens legado [🔗] sem id.
-   *
-   * Obs: Quando você começar a usar [🔗:<id>], esse contador legado vai deixar de ser
-   * a fonte de verdade para esses links.
-   */
   useEffect(() => {
     const matches = record.details.match(/\[🔗\]/g) ?? [];
     const count = matches.length;
@@ -119,7 +112,6 @@ export function RecordCard({
   };
 
   const getCurrentFileName = (refId: string): string => {
-    // Novo padrão
     const byId = record.linkFilesById?.[refId];
     if (byId) return byId;
 
@@ -144,7 +136,6 @@ export function RecordCard({
       return;
     }
 
-    // Novo: grava no dicionário por ID (fonte da verdade daqui pra frente)
     const nextById = { ...(record.linkFilesById ?? {}) };
     nextById[refId] = trimmed;
     update({ linkFilesById: nextById });

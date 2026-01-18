@@ -8,7 +8,6 @@ type TreeViewProps = {
   expanded: Set<string>;
   onToggle: (path: string) => void;
 
-  // ✅ mudou: agora recebe também o caminho do diretório pai do arquivo clicado
   onFileClick?: (handle: FileSystemFileHandle, parentDirPath: string | null) => void;
 
   onDirClick?: (node: DirNode) => void;

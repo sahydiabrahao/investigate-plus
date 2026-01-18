@@ -38,8 +38,6 @@ export function LinkPlugin({ onActiveLinkChange }: LinkPluginProps) {
       const text = rootEl.textContent ?? '';
       const cursorPos = getCursorOffset(rootEl, range);
 
-      // ✅ base36 com 4 chars: [🔗:39w4]
-      // ✅ legado: [🔗]
       const regex = /\[🔗(?::([a-z0-9]{4}))?\]/gi;
 
       let match: RegExpExecArray | null;
@@ -49,7 +47,7 @@ export function LinkPlugin({ onActiveLinkChange }: LinkPluginProps) {
         const start = match.index;
         const end = start + match[0].length;
 
-        if (cursorPos >= start && cursorPos < end) {
+        if (cursorPos > start && cursorPos < end) {
           const refId = match[1];
           const rect = range.cloneRange().getBoundingClientRect();
 

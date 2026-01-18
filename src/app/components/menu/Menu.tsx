@@ -5,18 +5,15 @@ import type { DirNode } from '@/utils/read-directory-tree';
 import { useCaseContext } from '@/context/CaseContext';
 
 export function Menu() {
-  // ✅ mudou: em vez de setSelectedCaseHandle, vamos usar selectCase (novo no Context)
   const { dirTree, selectCase, setCurrentDirPath, setViewMode } = useCaseContext();
 
   const { expanded, handleToggle, handleDirClick } = useTreeState(dirTree);
 
-  // ✅ mudou: agora recebemos também o caminho da pasta pai do arquivo clicado
   async function handleFileClick(handle: FileSystemFileHandle, parentDirPath: string | null) {
     const file = await handle.getFile();
     const name = file.name.toLowerCase();
 
     if (name.endsWith('.json')) {
-      // ✅ novo: seleciona caso + registra a pasta do caso no Context
       selectCase(handle, parentDirPath);
       setViewMode('dashboard');
       return;

@@ -20,7 +20,6 @@ import { findFileInTree } from '@/utils/find-file-in-tree';
 import { useCaseContext } from '@/context/CaseContext';
 
 export default function Dashboard() {
-  // ✅ mudou: pegamos selectedCaseTree em vez de dirTree (para anexos)
   const { selectedCaseHandle, selectedCaseTree, setStatus } = useCaseContext();
 
   const { data, loading, error } = useReadJsonFile({
@@ -44,7 +43,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (data) {
-      // ✅ garante que registros antigos tenham linkFilesById inicializado
       const normalized = normalizeCaseJson(data);
 
       setEditableCase(normalized);
@@ -99,7 +97,7 @@ export default function Dashboard() {
             ...prev,
             records: prev.records.map((record) => (record.id === id ? updated : record)),
           }
-        : prev
+        : prev,
     );
   };
 
@@ -110,7 +108,7 @@ export default function Dashboard() {
             ...prev,
             records: [...prev.records, createEmptyRecord()],
           }
-        : prev
+        : prev,
     );
   };
 
@@ -121,7 +119,7 @@ export default function Dashboard() {
             ...prev,
             records: prev.records.filter((r) => r.id !== id),
           }
-        : prev
+        : prev,
     );
   };
 
@@ -135,7 +133,7 @@ export default function Dashboard() {
               [key]: value,
             },
           }
-        : prev
+        : prev,
     );
   };
 
@@ -159,7 +157,6 @@ export default function Dashboard() {
   };
 
   async function handleOpenReference(fileName: string) {
-    // ✅ mudou: agora buscamos só dentro da pasta do caso selecionado
     if (!selectedCaseTree) {
       alert('Pasta do caso não encontrada.');
       return;

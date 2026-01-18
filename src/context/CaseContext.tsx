@@ -25,10 +25,8 @@ type CaseContextValue = {
   selectedCaseHandle: FileSystemFileHandle | null;
   setSelectedCaseHandle: React.Dispatch<React.SetStateAction<FileSystemFileHandle | null>>;
 
-  // ✅ NOVO: subtree restrita ao caso selecionado (pasta do caso)
   selectedCaseTree: DirNode | null;
 
-  // ✅ NOVO: API única para selecionar caso (handle + pasta pai)
   selectCase: (handle: FileSystemFileHandle, parentDirPath: string | null) => void;
 
   statusByFile: CaseStatusMap;
@@ -44,7 +42,6 @@ type CaseContextValue = {
 
 const CaseContext = createContext<CaseContextValue | null>(null);
 
-// ✅ helper: encontra um DirNode pelo path dentro do dirTree
 function findDirNodeByPath(root: DirNode, path: string): DirNode | null {
   const stack: NodeItem[] = [root];
 
@@ -66,10 +63,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
 
   const [selectedCaseHandle, setSelectedCaseHandle] = useState<FileSystemFileHandle | null>(null);
 
-  // ✅ NOVO: path da pasta do caso (pra recalcular a subtree quando dirTree muda)
   const [selectedCaseDirPath, setSelectedCaseDirPath] = useState<string | null>(null);
 
-  // ✅ NOVO: subtree do caso selecionado
   const [selectedCaseTree, setSelectedCaseTree] = useState<DirNode | null>(null);
 
   const [statusByFile, setStatusByFile] = useState<CaseStatusMap>({});
@@ -95,7 +90,6 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     }
   }, [dirTree, currentDirPath]);
 
-  // ✅ sempre que o dirTree mudar, tenta recalcular a subtree do caso selecionado
   useEffect(() => {
     if (!dirTree || !selectedCaseDirPath) {
       setSelectedCaseTree(null);
@@ -110,7 +104,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     (fileKey: string): CaseStatus => {
       return statusByFile[fileKey] ?? 'null';
     },
-    [statusByFile]
+    [statusByFile],
   );
 
   const setStatus = useCallback((fileKey: string, status: CaseStatus) => {
@@ -124,12 +118,10 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // ✅ NOVO: função oficial de seleção de caso (resolve a pasta do caso)
   const selectCase = useCallback(
     (handle: FileSystemFileHandle, parentDirPath: string | null) => {
       setSelectedCaseHandle(handle);
 
-      // se não conseguimos inferir a pasta do caso, limpamos a subtree
       if (!parentDirPath) {
         setSelectedCaseDirPath(null);
         setSelectedCaseTree(null);
@@ -138,7 +130,6 @@ export function CaseProvider({ children }: { children: ReactNode }) {
 
       setSelectedCaseDirPath(parentDirPath);
 
-      // se já temos a árvore, já resolve de imediato
       if (dirTree) {
         const found = findDirNodeByPath(dirTree, parentDirPath);
         setSelectedCaseTree(found);
@@ -146,7 +137,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
         setSelectedCaseTree(null);
       }
     },
-    [dirTree]
+    [dirTree],
   );
 
   const value = useMemo<CaseContextValue>(
@@ -184,7 +175,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       setStatus,
       currentDirPath,
       viewMode,
-    ]
+    ],
   );
 
   return <CaseContext.Provider value={value}>{children}</CaseContext.Provider>;
