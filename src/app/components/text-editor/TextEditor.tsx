@@ -4,6 +4,7 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
+import { TabIndentPlugin } from './plugins/TabIndentPlugin';
 import { $getRoot, $createParagraphNode, $createTextNode, LexicalEditor } from 'lexical';
 import { LinkPlugin, ActiveLinkData, TextEditorToolbar } from '@/app/components';
 import { THEME } from './theme';
@@ -66,6 +67,7 @@ export function TextEditor({
           placeholder={<span className='text-editor__placeholder'>{placeholder}</span>}
           ErrorBoundary={LexicalErrorBoundary}
         />
+        <TabIndentPlugin />
         <HistoryPlugin />
         <OnChangePlugin
           onChange={(editorState) => {
