@@ -29,24 +29,39 @@
   padding: $space-0 $space-0;
 }
 
+.menu__list {
+  margin: $space-0;
+  padding: $space-0;
+  list-style: none;
+}
+
+.menu__row {
+  padding-left: calc(#{$space-8} + (#{$space-16} * var(--level)));
+}
+
 .menu__item {
+  width: 100%;
   display: flex;
   align-items: center;
-  min-width: $size-0;
   gap: $space-8;
   height: $size-32;
-  padding-left: calc(#{$space-8} + (#{$space-16} * var(--level)));
-  padding-right: $space-8;
-  font-size: $font-14;
-  line-height: $line-height-15;
+  padding: $space-0 $space-8;
   color: $color-text-muted;
   white-space: nowrap;
+  background: none;
+  border: none;
+  text-align: left;
   cursor: default;
 
   &:hover {
     background: $color-hover;
     color: $color-text;
   }
+}
+
+.menu__item--active {
+  background: $color-surface-alt;
+  color: $color-text;
 }
 
 .menu__icon {
@@ -60,4 +75,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.menu__caret {
+  width: $size-16;
+  text-align: center;
+  flex-shrink: 0;
+  opacity: 0.8;
 }
