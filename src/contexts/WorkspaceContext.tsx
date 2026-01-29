@@ -14,11 +14,6 @@ type WorkspaceContextValue = {
   rootHandle: FileSystemDirectoryHandle | null;
   dirTree: DirNode | null;
 
-  // seleção de arquivo (evidência, etc.)
-  selectedPath: string | null;
-  selectPath: (path: string | null) => void;
-
-  // seleção de caso (pasta do caso)
   selectedCasePath: string | null;
   selectCase: (path: string | null) => void;
 
@@ -40,12 +35,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [rootHandle, setRootHandle] = useState<FileSystemDirectoryHandle | null>(null);
   const [dirTree, setDirTree] = useState<DirNode | null>(null);
 
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedCasePath, setSelectedCasePath] = useState<string | null>(null);
-
-  const selectPath = useCallback((path: string | null) => {
-    setSelectedPath(path);
-  }, []);
 
   const selectCase = useCallback((path: string | null) => {
     setSelectedCasePath(path);
@@ -59,15 +49,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       const tree = await scanDirectoryTree(handle);
       setDirTree(tree);
 
-      if (selectedPath && !pathExistsInTree(tree, selectedPath)) {
-        setSelectedPath(null);
-      }
-
       if (selectedCasePath && !pathExistsInTree(tree, selectedCasePath)) {
         setSelectedCasePath(null);
       }
     },
-    [selectedPath, selectedCasePath],
+    [selectedCasePath],
   );
 
   useEffect(() => {
@@ -90,9 +76,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     await saveDirectoryHandle(handle);
     setRootHandle(handle);
-
-    // zera seleções
-    setSelectedPath(null);
     setSelectedCasePath(null);
 
     await buildTree(handle);
@@ -107,26 +90,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     () => ({
       rootHandle,
       dirTree,
-
-      selectedPath,
-      selectPath,
-
       selectedCasePath,
       selectCase,
-
       importFolder,
       refreshTree,
     }),
-    [
-      rootHandle,
-      dirTree,
-      selectedPath,
-      selectPath,
-      selectedCasePath,
-      selectCase,
-      importFolder,
-      refreshTree,
-    ],
+    [rootHandle, dirTree, selectedCasePath, selectCase, importFolder, refreshTree],
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
