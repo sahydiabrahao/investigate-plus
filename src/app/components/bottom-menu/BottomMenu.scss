@@ -1,0 +1,32 @@
+@use '@/styles/global' as *;
+
+.bottom-menu {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: $color-surface;
+  border-top: 1px solid $color-border;
+}
+
+.bottom-menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $size-32;
+  height: $size-32;
+  font-size: $font-16;
+  color: $color-text-muted;
+  background: transparent;
+  border-radius: $radius-8;
+  cursor: pointer;
+
+  &:hover {
+    background: $color-hover;
+    color: $color-text;
+  }
+
+  &:active {
+    background: $color-surface-alt;
+  }
+}

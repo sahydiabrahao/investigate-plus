@@ -1,9 +1,35 @@
+import './Menu.scss';
+
 export function Menu() {
   return (
     <nav className='menu'>
-      <ul className='menu__list'>
-        <h1>Menu here</h1>
-      </ul>
+      <div className='menu__header'>
+        <span className='menu__title'>INVESTIGATE</span>
+      </div>
+
+      <div className='menu__content'>
+        <ul className='menu__list'>
+          <li className='menu__item menu__item--active'>
+            <span className='menu__icon'>📁</span>
+            <span className='menu__label'>oc01-2025-dp31</span>
+          </li>
+
+          <li className='menu__item'>
+            <span className='menu__icon'>📄</span>
+            <span className='menu__label'>s.docx</span>
+          </li>
+
+          <li className='menu__item'>
+            <span className='menu__icon'>📁</span>
+            <span className='menu__label'>1-protocolo</span>
+          </li>
+
+          <li className='menu__item'>
+            <span className='menu__icon'>📁</span>
+            <span className='menu__label'>2-infoseg</span>
+          </li>
+        </ul>
+      </div>
     </nav>
   );
 }

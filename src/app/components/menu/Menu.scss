@@ -1,0 +1,69 @@
+@use '@/styles/global' as *;
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: $color-surface;
+  color: $color-text;
+}
+
+.menu__header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: $space-0 $space-16;
+  border-bottom: 1px solid $color-border;
+}
+
+.menu__title {
+  font-size: $font-14;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.08em;
+  color: $color-text;
+}
+
+.menu__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: $space-8 $space-0;
+}
+
+.menu__list {
+  list-style: none;
+  margin: $space-0;
+  padding: $space-0 $space-16;
+}
+
+.menu__item {
+  display: flex;
+  align-items: center;
+  gap: $space-8;
+  padding: $space-8 $space-16;
+  font-size: $font-14;
+  line-height: $line-height-15;
+  color: $color-text-muted;
+  cursor: pointer;
+
+  &:hover {
+    background: $color-hover;
+    color: $color-text;
+  }
+}
+
+.menu__item--active {
+  background: $color-surface-alt;
+  color: $color-text;
+}
+
+.menu__icon {
+  width: 20px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.menu__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

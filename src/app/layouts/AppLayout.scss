@@ -6,27 +6,33 @@
   width: 100%;
   background: $color-bg;
   color: $color-text;
+}
 
-  &__sidebar {
-    width: 240px;
-    background: $color-surface;
-    color: $color-text;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid $color-border;
-  }
+.app-layout__sidebar {
+  width: 240px;
+  background: $color-surface;
+  border-right: 1px solid $color-border;
+  display: flex;
+  flex-direction: column;
+}
 
-  &__menu {
-    width: 56px;
-    background: $color-surface;
-    border-right: 1px solid $color-border;
-  }
+.app-layout__sidebar-content {
+  flex: 1;
+  min-height: $size-0;
+  overflow-y: auto;
+}
 
-  &__content {
-    flex: 1;
-    padding: $space-24;
-    overflow-y: auto;
-    background: $color-bg;
-    color: $color-text;
-  }
+.app-layout__sidebar-bottom {
+  height: $size-48;
+  flex-shrink: 0;
+  border-top: 1px solid $color-border;
+  background: $color-surface;
+}
+
+.app-layout__content {
+  flex: 1;
+  min-width: $size-0;
+  padding: $space-24;
+  overflow-y: auto;
+  background: $color-bg;
 }
