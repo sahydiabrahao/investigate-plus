@@ -9,6 +9,7 @@ export type DirNode = {
   type: 'directory';
   name: string;
   path: string;
+  handle: FileSystemDirectoryHandle;
   children: Array<DirNode | FileNode>;
 };
 
@@ -41,6 +42,7 @@ export async function scanDirectoryTree(
     type: 'directory',
     name,
     path,
+    handle,
     children,
   };
 }

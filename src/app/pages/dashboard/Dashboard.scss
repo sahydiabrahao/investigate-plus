@@ -6,6 +6,10 @@
   gap: $space-16;
 }
 
+.dashboard--empty {
+  padding: $space-16;
+}
+
 .dashboard__title {
   font-size: $font-20;
   font-weight: $font-weight-bold;
@@ -13,6 +17,11 @@
 
 .dashboard__subtitle {
   color: $color-text-muted;
+  margin-top: $space-12;
+}
+
+.dashboard__actions {
+  margin-top: $space-16;
 }
 
 .dashboard__card {
@@ -25,6 +34,7 @@
 .dashboard__row {
   display: flex;
   gap: $space-8;
+  align-items: baseline;
 }
 
 .dashboard__label {
@@ -34,4 +44,51 @@
 .dashboard__value {
   font-family: monospace;
   word-break: break-all;
+}
+
+.dashboard__list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-8;
+  margin-top: $space-12;
+}
+
+.dashboard__case-button {
+  display: flex;
+  align-items: center;
+  gap: $space-8;
+
+  width: 100%;
+  text-align: left;
+
+  padding: $space-12 $space-16;
+  border-radius: $radius-8;
+  border: 1px solid $color-border;
+
+  background: $color-surface;
+  color: $color-bg;
+
+  cursor: pointer;
+
+  &:hover {
+    background: $color-hover;
+  }
+
+  &:focus-visible {
+    outline: $space-2 solid $color-accent;
+    outline-offset: $space-2;
+  }
+}
+
+.dashboard__pre {
+  margin-top: $space-12;
+  padding: $space-16;
+
+  border-radius: $radius-8;
+  border: 1px solid $color-border;
+
+  background: $color-surface;
+  color: $color-bg;
+
+  overflow: auto;
 }

@@ -2,15 +2,22 @@ import { useState } from 'react';
 import './Menu.scss';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 
-type TreeNode = {
-  type: 'directory' | 'file';
-  name: string;
-  path: string;
-  children?: TreeNode[] | undefined;
-};
+type TreeNode =
+  | {
+      type: 'directory';
+      name: string;
+      path: string;
+      children?: TreeNode[] | undefined;
+    }
+  | {
+      type: 'file';
+      name: string;
+      path: string;
+      handle?: FileSystemFileHandle;
+    };
 
 export function Menu() {
-  const { dirTree, selectedPath, selectPath } = useWorkspace();
+  const { dirTree, selectedPath, selectPath, selectedCasePath, selectCase } = useWorkspace();
 
   return (
     <nav className='menu'>
@@ -32,7 +39,9 @@ export function Menu() {
               node={dirTree as TreeNode}
               level={0}
               selectedPath={selectedPath}
+              selectedCasePath={selectedCasePath}
               onSelectFile={selectPath}
+              onSelectCase={selectCase}
             />
           </ul>
         )}
@@ -45,28 +54,39 @@ function TreeItem({
   node,
   level,
   selectedPath,
+  selectedCasePath,
   onSelectFile,
+  onSelectCase,
 }: {
   node: TreeNode;
   level: number;
   selectedPath: string | null;
+  selectedCasePath: string | null;
   onSelectFile: (path: string) => void;
+  onSelectCase: (path: string) => void;
 }) {
   const isDir = node.type === 'directory';
   const visualLevel = Math.max(level - 1, 0);
-
+  const isCaseCandidate = isDir && level === 1;
   const [isOpen, setIsOpen] = useState(false);
 
   function handleClick() {
     if (isDir) {
       setIsOpen((prev) => !prev);
+
+      if (isCaseCandidate) {
+        onSelectCase(node.path);
+      }
+
       return;
     }
 
     onSelectFile(node.path);
   }
 
-  const isActive = selectedPath === node.path;
+  const isActiveFile = !isDir && selectedPath === node.path;
+  const isActiveCase = isCaseCandidate && selectedCasePath === node.path;
+  const isActive = isActiveFile || isActiveCase;
 
   return (
     <>
@@ -76,7 +96,7 @@ function TreeItem({
           className={`menu__item ${isActive ? 'menu__item--active' : ''}`}
           onClick={handleClick}
           aria-expanded={isDir ? isOpen : undefined}
-          aria-current={!isDir && isActive ? 'true' : undefined}
+          aria-current={!isDir && isActiveFile ? 'true' : undefined}
         >
           <span className='menu__caret'>{isDir ? (isOpen ? '▾' : '▸') : ''}</span>
           <span className='menu__icon'>{isDir ? '📁' : '📄'}</span>
@@ -92,7 +112,9 @@ function TreeItem({
             node={child}
             level={level + 1}
             selectedPath={selectedPath}
+            selectedCasePath={selectedCasePath}
             onSelectFile={onSelectFile}
+            onSelectCase={onSelectCase}
           />
         ))}
     </>

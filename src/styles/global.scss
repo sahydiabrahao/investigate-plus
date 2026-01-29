@@ -10,8 +10,10 @@ $color-text: #e6e8eb;
 $color-text-muted: #a1a6ad;
 
 $color-border: #40464f;
-$color-hover: rgba(255, 255, 255, 0.06);
+$color-hover: rgba(64, 70, 79, 0.6);
 
+$color-nav-active: rgba(250, 204, 21, 0.18);
+$color-nav-hover: rgba(0, 0, 0, 0.25);
 $color-accent: #facc15;
 
 $color-success: #22c55e;
@@ -55,6 +57,7 @@ $line-height-16: 1.6;
    SPACING (explicit, px)
 ================================================= */
 $space-0: 0;
+$space-2: 2px;
 $space-4: 4px;
 $space-8: 8px;
 $space-12: 12px;

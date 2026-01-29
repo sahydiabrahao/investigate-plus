@@ -53,13 +53,12 @@
   cursor: default;
 
   &:hover {
-    background: $color-hover;
-    color: $color-text;
+    background: $color-nav-hover;
   }
 }
 
 .menu__item--active {
-  background: $color-surface-alt;
+  background: $color-nav-active;
   color: $color-text;
 }
 
