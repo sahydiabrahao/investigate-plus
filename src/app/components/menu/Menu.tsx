@@ -10,8 +10,7 @@ type TreeNode = {
 };
 
 export function Menu() {
-  const { dirTree } = useWorkspace();
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const { dirTree, selectedPath, selectPath } = useWorkspace();
 
   return (
     <nav className='menu'>
@@ -33,7 +32,7 @@ export function Menu() {
               node={dirTree as TreeNode}
               level={0}
               selectedPath={selectedPath}
-              onSelectFile={setSelectedPath}
+              onSelectFile={selectPath}
             />
           </ul>
         )}

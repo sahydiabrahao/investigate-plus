@@ -1,0 +1,37 @@
+@use '@/styles/global' as *;
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: $space-16;
+}
+
+.dashboard__title {
+  font-size: $font-20;
+  font-weight: $font-weight-bold;
+}
+
+.dashboard__subtitle {
+  color: $color-text-muted;
+}
+
+.dashboard__card {
+  background: $color-surface-alt;
+  border-radius: $radius-8;
+  padding: $space-16;
+  border: 1px solid $color-border;
+}
+
+.dashboard__row {
+  display: flex;
+  gap: $space-8;
+}
+
+.dashboard__label {
+  font-weight: $font-weight-bold;
+}
+
+.dashboard__value {
+  font-family: monospace;
+  word-break: break-all;
+}
