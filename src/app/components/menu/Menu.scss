@@ -81,3 +81,16 @@
   flex-shrink: 0;
   opacity: 0.8;
 }
+
+.menu__item--investigation {
+  color: $color-text;
+  font-weight: $font-weight-medium;
+
+  .menu__icon {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: $color-nav-hover;
+  }
+}

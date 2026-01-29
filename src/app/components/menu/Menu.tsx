@@ -16,8 +16,45 @@ type TreeNode =
       handle?: FileSystemFileHandle;
     };
 
+const INVESTIGATION_FILE = 'investigacao.json';
+
+function guessMimeType(fileName: string): string {
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith('.txt')) return 'text/plain';
+  if (lower.endsWith('.md')) return 'text/markdown';
+  if (lower.endsWith('.json')) return 'application/json';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.pdf')) return 'application/pdf';
+  return 'application/octet-stream';
+}
+
+async function openFileInNewTab(fileHandle: FileSystemFileHandle, fileName: string) {
+  const file = await fileHandle.getFile();
+
+  const type = file.type && file.type.trim().length > 0 ? file.type : guessMimeType(fileName);
+
+  const blob = type === file.type ? file : new Blob([file], { type });
+
+  const url = URL.createObjectURL(blob);
+
+  const opened = window.open(url, '_blank', 'noopener,noreferrer');
+
+  if (!opened) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.click();
+  }
+
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 export function Menu() {
-  const { dirTree, selectedPath, selectPath, selectedCasePath, selectCase } = useWorkspace();
+  const { dirTree, selectedCasePath, selectCase } = useWorkspace();
 
   return (
     <nav className='menu'>
@@ -38,9 +75,7 @@ export function Menu() {
             <TreeItem
               node={dirTree as TreeNode}
               level={0}
-              selectedPath={selectedPath}
               selectedCasePath={selectedCasePath}
-              onSelectFile={selectPath}
               onSelectCase={selectCase}
             />
           </ul>
@@ -53,24 +88,28 @@ export function Menu() {
 function TreeItem({
   node,
   level,
-  selectedPath,
   selectedCasePath,
-  onSelectFile,
   onSelectCase,
 }: {
   node: TreeNode;
   level: number;
-  selectedPath: string | null;
   selectedCasePath: string | null;
-  onSelectFile: (path: string) => void;
   onSelectCase: (path: string) => void;
 }) {
   const isDir = node.type === 'directory';
   const visualLevel = Math.max(level - 1, 0);
+
   const isCaseCandidate = isDir && level === 1;
+
   const [isOpen, setIsOpen] = useState(false);
 
-  function handleClick() {
+  const hasInvestigationFile =
+    isCaseCandidate &&
+    (node.children ?? []).some(
+      (child) => child.type === 'file' && child.name === INVESTIGATION_FILE,
+    );
+
+  async function handleClick() {
     if (isDir) {
       setIsOpen((prev) => !prev);
 
@@ -81,22 +120,40 @@ function TreeItem({
       return;
     }
 
-    onSelectFile(node.path);
+    if (node.name === INVESTIGATION_FILE) return;
+
+    if (node.handle) {
+      try {
+        await openFileInNewTab(node.handle, node.name);
+      } catch (e) {
+        console.error(e);
+      }
+    }
   }
 
-  const isActiveFile = !isDir && selectedPath === node.path;
+  function handleOpenInvestigation() {
+    onSelectCase(node.path);
+  }
+
   const isActiveCase = isCaseCandidate && selectedCasePath === node.path;
-  const isActive = isActiveFile || isActiveCase;
+
+  const visibleChildren = isDir
+    ? (node.children ?? []).filter((child) => {
+        if (child.type !== 'file') return true;
+        if (isCaseCandidate && child.name === INVESTIGATION_FILE) return false;
+        return true;
+      })
+    : [];
 
   return (
     <>
       <li className='menu__row' style={{ '--level': visualLevel } as React.CSSProperties}>
         <button
           type='button'
-          className={`menu__item ${isActive ? 'menu__item--active' : ''}`}
+          className={`menu__item ${isActiveCase ? 'menu__item--active' : ''}`}
           onClick={handleClick}
           aria-expanded={isDir ? isOpen : undefined}
-          aria-current={!isDir && isActiveFile ? 'true' : undefined}
+          aria-current={isActiveCase ? 'true' : undefined}
         >
           <span className='menu__caret'>{isDir ? (isOpen ? '▾' : '▸') : ''}</span>
           <span className='menu__icon'>{isDir ? '📁' : '📄'}</span>
@@ -104,19 +161,33 @@ function TreeItem({
         </button>
       </li>
 
-      {isDir &&
-        isOpen &&
-        node.children?.map((child) => (
-          <TreeItem
-            key={child.path}
-            node={child}
-            level={level + 1}
-            selectedPath={selectedPath}
-            selectedCasePath={selectedCasePath}
-            onSelectFile={onSelectFile}
-            onSelectCase={onSelectCase}
-          />
-        ))}
+      {isDir && isOpen && (
+        <>
+          {hasInvestigationFile && (
+            <li className='menu__row' style={{ '--level': visualLevel + 1 } as React.CSSProperties}>
+              <button
+                type='button'
+                className='menu__item menu__item--investigation'
+                onClick={handleOpenInvestigation}
+              >
+                <span className='menu__caret' />
+                <span className='menu__icon'>📌</span>
+                <span className='menu__label'>Investigação</span>
+              </button>
+            </li>
+          )}
+
+          {visibleChildren.map((child) => (
+            <TreeItem
+              key={child.path}
+              node={child}
+              level={level + 1}
+              selectedCasePath={selectedCasePath}
+              onSelectCase={onSelectCase}
+            />
+          ))}
+        </>
+      )}
     </>
   );
 }
