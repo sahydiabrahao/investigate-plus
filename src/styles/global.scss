@@ -111,6 +111,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+ul,
+ol {
+  margin: $space-0;
+  padding: $space-0;
+  list-style: none;
+}
+
+li {
+  margin: $space-0;
+  padding: $space-0;
+}
+
 #root {
   height: 100%;
   width: 100%;

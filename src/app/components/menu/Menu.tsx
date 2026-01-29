@@ -1,6 +1,16 @@
 import './Menu.scss';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+
+type TreeNode = {
+  type: 'directory' | 'file';
+  name: string;
+  path: string;
+  children?: TreeNode[];
+};
 
 export function Menu() {
+  const { dirTree } = useWorkspace();
+
   return (
     <nav className='menu'>
       <div className='menu__header'>
@@ -8,28 +18,35 @@ export function Menu() {
       </div>
 
       <div className='menu__content'>
-        <ul className='menu__list'>
-          <li className='menu__item menu__item--active'>
-            <span className='menu__icon'>📁</span>
-            <span className='menu__label'>oc01-2025-dp31</span>
-          </li>
-
-          <li className='menu__item'>
-            <span className='menu__icon'>📄</span>
-            <span className='menu__label'>s.docx</span>
-          </li>
-
-          <li className='menu__item'>
-            <span className='menu__icon'>📁</span>
-            <span className='menu__label'>1-protocolo</span>
-          </li>
-
-          <li className='menu__item'>
-            <span className='menu__icon'>📁</span>
-            <span className='menu__label'>2-infoseg</span>
-          </li>
-        </ul>
+        {!dirTree ? (
+          <div className='menu__empty'>
+            <span className='menu__empty-title'>Nenhuma pasta importada</span>
+            <span className='menu__empty-subtitle'>
+              Use o botão <strong>Import</strong> para escolher uma pasta.
+            </span>
+          </div>
+        ) : (
+          <ul className='menu__list'>
+            <TreeItem node={dirTree as TreeNode} level={0} />
+          </ul>
+        )}
       </div>
     </nav>
+  );
+}
+
+function TreeItem({ node, level }: { node: TreeNode; level: number }) {
+  const isDir = node.type === 'directory';
+  const visualLevel = Math.max(level - 1, 0);
+  return (
+    <>
+      <div className='menu__item' style={{ '--level': visualLevel } as React.CSSProperties}>
+        <span className='menu__icon'>{isDir ? '📁' : '📄'}</span>
+        <span className='menu__label'>{node.name}</span>
+      </div>
+
+      {isDir &&
+        node.children?.map((child) => <TreeItem key={child.path} node={child} level={level + 1} />)}
+    </>
   );
 }

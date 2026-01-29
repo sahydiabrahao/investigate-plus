@@ -9,11 +9,12 @@
 }
 
 .menu__header {
-  height: 56px;
+  height: $size-48;
   display: flex;
   align-items: center;
   padding: $space-0 $space-16;
   border-bottom: 1px solid $color-border;
+  flex-shrink: 0;
 }
 
 .menu__title {
@@ -25,25 +26,22 @@
 
 .menu__content {
   flex: 1;
-  overflow-y: auto;
-  padding: $space-8 $space-0;
-}
-
-.menu__list {
-  list-style: none;
-  margin: $space-0;
-  padding: $space-0 $space-16;
+  padding: $space-0 $space-0;
 }
 
 .menu__item {
   display: flex;
   align-items: center;
+  min-width: $size-0;
   gap: $space-8;
-  padding: $space-8 $space-16;
+  height: $size-32;
+  padding-left: calc(#{$space-8} + (#{$space-16} * var(--level)));
+  padding-right: $space-8;
   font-size: $font-14;
   line-height: $line-height-15;
   color: $color-text-muted;
-  cursor: pointer;
+  white-space: nowrap;
+  cursor: default;
 
   &:hover {
     background: $color-hover;
@@ -51,19 +49,15 @@
   }
 }
 
-.menu__item--active {
-  background: $color-surface-alt;
-  color: $color-text;
-}
-
 .menu__icon {
-  width: 20px;
+  width: $size-20;
   text-align: center;
   opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .menu__label {
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }

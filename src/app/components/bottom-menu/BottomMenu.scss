@@ -5,8 +5,6 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  background: $color-surface;
-  border-top: 1px solid $color-border;
 }
 
 .bottom-menu__item {
@@ -21,12 +19,17 @@
   border-radius: $radius-8;
   cursor: pointer;
 
-  &:hover {
+  &:hover:enabled {
     background: $color-hover;
     color: $color-text;
   }
 
-  &:active {
+  &:active:enabled {
     background: $color-surface-alt;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
