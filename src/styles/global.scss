@@ -1,15 +1,16 @@
 /* =================================================
    COLORS (semantic)
 ================================================= */
-$color-bg: #0f172a;
-$color-surface: #111827;
-$color-surface-alt: #1f2937;
+$color-bg: #272c32;
 
-$color-text: #e5e7eb;
-$color-text-muted: #9ca3af;
+$color-surface: #f6f7f9;
+$color-surface-alt: #ffffff;
 
-$color-border: #374151;
-$color-hover: rgba(255, 255, 255, 0.04);
+$color-text: #e6e8eb;
+$color-text-muted: #a1a6ad;
+
+$color-border: #40464f;
+$color-hover: rgba(255, 255, 255, 0.06);
 
 $color-accent: #facc15;
 
@@ -21,7 +22,7 @@ $color-danger: #ef4444;
    TYPOGRAPHY
 ================================================= */
 $font-family-sans:
-  'Poppins',
+  'Inter',
   system-ui,
   -apple-system,
   Segoe UI,

@@ -15,7 +15,7 @@
   max-width: 520px;
   position: relative;
 
-  background: $color-surface;
+  background: $color-bg;
   border-right: 1px solid $color-border;
   display: flex;
   flex-direction: column;
@@ -42,7 +42,7 @@
   height: $size-48;
   flex-shrink: 0;
   border-top: 1px solid $color-border;
-  background: $color-surface;
+  background: $color-bg;
 }
 
 .app-layout__content {
@@ -50,5 +50,5 @@
   min-width: $size-0;
   padding: $space-24;
   overflow-y: auto;
-  background: $color-bg;
+  background: $color-surface;
 }
