@@ -1,5 +1,5 @@
 import './Dashboard.scss';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import type { DirNode } from '@/utils/read-directory-tree';
 import { INVESTIGATION_FILE } from '@/constants/investigation.constants';
@@ -15,6 +15,8 @@ type LoadState =
   | { status: 'missing-file'; caseDirName: string }
   | { status: 'ready'; caseDirName: string; json: unknown }
   | { status: 'error'; message: string };
+
+type SaveStatus = 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
 
 function safeJsonParse(text: string): { ok: true; value: unknown } | { ok: false; error: string } {
   try {
@@ -73,8 +75,50 @@ export default function Dashboard() {
   const [state, setState] = useState<LoadState>({ status: 'idle' });
   const [notesDraft, setNotesDraft] = useState<unknown | null>(null);
 
+  // Autosave infra (mantém fora do state para não re-renderizar)
+  const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
+  const saveTimerRef = useRef<number | null>(null);
+  const lastSavedSnapshotRef = useRef<string>('');
+
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+
+  async function saveNotesDraftToFile(nextNotesState: unknown) {
+    const fh = fileHandleRef.current;
+    if (!fh) return;
+
+    const file = await fh.getFile();
+    const text = await file.text();
+
+    const parsed = safeJsonParse(text);
+    if (!parsed.ok) throw new Error(parsed.error);
+
+    interface Investigation {
+      notesRich?: {
+        state?: unknown;
+      };
+    }
+
+    const json = parsed.value as Investigation;
+    json.notesRich = json.notesRich ?? {};
+    json.notesRich.state = nextNotesState;
+
+    const nextText = JSON.stringify(json, null, 2);
+
+    if (nextText === lastSavedSnapshotRef.current) return;
+
+    const writable = await fh.createWritable();
+    await writable.write(nextText);
+    await writable.close();
+
+    lastSavedSnapshotRef.current = nextText;
+  }
+
   useEffect(() => {
     let cancelled = false;
+
+    fileHandleRef.current = null;
+    lastSavedSnapshotRef.current = '';
+    setSaveStatus('idle');
 
     (async () => {
       if (!rootHandle) {
@@ -110,6 +154,9 @@ export default function Dashboard() {
         return;
       }
 
+      // mantém o handle para autosave
+      fileHandleRef.current = fileHandle;
+
       const file = await fileHandle.getFile();
       const text = await file.text();
 
@@ -128,7 +175,13 @@ export default function Dashboard() {
       }
 
       const loaded = parsed.value as Investigation;
+
+      // carrega no editor e marca como "idle" (não sujo)
       setNotesDraft(loaded?.notesRich?.state ?? null);
+      setSaveStatus('idle');
+
+      // snapshot para evitar re-save do mesmo conteúdo logo de cara
+      lastSavedSnapshotRef.current = JSON.stringify(parsed.value, null, 2);
 
       setState({
         status: 'ready',
@@ -143,6 +196,32 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, [rootHandle, dirTree, selectedCasePath]);
+
+  // Debounce autosave
+  useEffect(() => {
+    if (state.status !== 'ready') return;
+    if (saveStatus !== 'dirty') return;
+    if (notesDraft == null) return;
+    if (!fileHandleRef.current) return;
+
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+
+    saveTimerRef.current = window.setTimeout(() => {
+      (async () => {
+        try {
+          setSaveStatus('saving');
+          await saveNotesDraftToFile(notesDraft);
+          setSaveStatus('saved');
+        } catch {
+          setSaveStatus('error');
+        }
+      })();
+    }, 900);
+
+    return () => {
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    };
+  }, [notesDraft, saveStatus, state.status]);
 
   async function handleCreateInvestigation() {
     if (!selectedCasePath) return;
@@ -162,6 +241,8 @@ export default function Dashboard() {
       setState({ status: 'loading' });
 
       const fileHandle = await createInvestigationFile(caseNode.handle);
+      fileHandleRef.current = fileHandle;
+
       const file = await fileHandle.getFile();
       const text = await file.text();
 
@@ -178,7 +259,11 @@ export default function Dashboard() {
       }
 
       const created = parsed.value as Investigation;
+
       setNotesDraft(created?.notesRich?.state ?? null);
+      setSaveStatus('idle');
+
+      lastSavedSnapshotRef.current = JSON.stringify(parsed.value, null, 2);
 
       setState({
         status: 'ready',
@@ -293,10 +378,20 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <div className='dashboard__save-status'>
+          {saveStatus === 'saving' && 'Salvando…'}
+          {saveStatus === 'saved' && 'Salvo'}
+          {saveStatus === 'error' && 'Não foi possível salvar'}
+          {saveStatus === 'dirty' && 'Não salvo'}
+        </div>
+
         <div className='dashboard__section'>
           <NotesRichEditor
             initialState={notesDraft ?? initialNotesState}
-            onChange={(nextState) => setNotesDraft(nextState)}
+            onChange={(nextState) => {
+              setNotesDraft(nextState);
+              setSaveStatus('dirty');
+            }}
           />
         </div>
       </div>
