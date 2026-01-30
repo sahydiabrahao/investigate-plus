@@ -1,8 +1,8 @@
 import './Dashboard.scss';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import type { DirNode } from '@/utils/read-directory-tree';
-import { INVESTIGATION_FILE } from '@/constants/investigation.constants';
+import { INVESTIGATION_FILE, META_SUGGESTIONS } from '@/constants/investigation.constants';
 import { createNewInvestigation } from '@/utils/create-investigation';
 import NotesRichEditor from '@/app/components/notes-rich-editor/NotesRichEditor';
 
@@ -17,6 +17,8 @@ type LoadState =
   | { status: 'error'; message: string };
 
 type SaveStatus = 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
+
+type MetaItem = { key: string; value: string };
 
 function safeJsonParse(text: string): { ok: true; value: unknown } | { ok: false; error: string } {
   try {
@@ -73,16 +75,63 @@ export default function Dashboard() {
   const { rootHandle, dirTree, selectedCasePath } = useWorkspace();
 
   const [state, setState] = useState<LoadState>({ status: 'idle' });
-  const [notesDraft, setNotesDraft] = useState<unknown | null>(null);
 
-  // Autosave infra (mantém fora do state para não re-renderizar)
+  const [notesDraft, setNotesDraft] = useState<unknown | null>(null);
+  const [metaDraft, setMetaDraft] = useState<MetaItem[]>([]);
+
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const saveTimerRef = useRef<number | null>(null);
   const lastSavedSnapshotRef = useRef<string>('');
 
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  async function saveNotesDraftToFile(nextNotesState: unknown) {
+  const [isMetaAddOpen, setIsMetaAddOpen] = useState(false);
+  const metaAddRef = useRef<HTMLDivElement | null>(null);
+
+  const metaInputRefs = useRef<Array<HTMLInputElement | HTMLTextAreaElement | null>>([]);
+  const focusMetaIndexRef = useRef<number | null>(null);
+
+  const metaSuggestions = useMemo(() => [...META_SUGGESTIONS], []);
+
+  const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  function getMeasureCanvas(): HTMLCanvasElement {
+    if (!measureCanvasRef.current) {
+      measureCanvasRef.current = document.createElement('canvas');
+    }
+    return measureCanvasRef.current;
+  }
+
+  function autosizeInput(el: HTMLInputElement, value: string) {
+    const style = window.getComputedStyle(el);
+    const font = style.font || `${style.fontSize} ${style.fontFamily}`;
+
+    const canvas = getMeasureCanvas();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.font = font;
+
+    const text = value && value.length > 0 ? value : '—';
+
+    const measured = ctx.measureText(text).width;
+
+    const paddingLeft = Number.parseFloat(style.paddingLeft || '0') || 0;
+    const paddingRight = Number.parseFloat(style.paddingRight || '0') || 0;
+    const borders =
+      (Number.parseFloat(style.borderLeftWidth || '0') || 0) +
+      (Number.parseFloat(style.borderRightWidth || '0') || 0);
+
+    const extra = 14;
+    const next = measured + paddingLeft + paddingRight + borders + extra;
+
+    const max = 520;
+
+    const clamped = Math.min(max, next);
+    el.style.width = `${Math.round(clamped)}px`;
+  }
+
+  async function saveDraftToFile(next: { notesState: unknown | null; meta: MetaItem[] }) {
     const fh = fileHandleRef.current;
     if (!fh) return;
 
@@ -93,14 +142,19 @@ export default function Dashboard() {
     if (!parsed.ok) throw new Error(parsed.error);
 
     interface Investigation {
-      notesRich?: {
-        state?: unknown;
-      };
+      meta?: MetaItem[];
+      notesRich?: { state?: unknown };
+      updatedAt?: string;
     }
 
     const json = parsed.value as Investigation;
+
+    json.meta = next.meta;
+
     json.notesRich = json.notesRich ?? {};
-    json.notesRich.state = nextNotesState;
+    json.notesRich.state = next.notesState ?? null;
+
+    json.updatedAt = new Date().toISOString();
 
     const nextText = JSON.stringify(json, null, 2);
 
@@ -119,6 +173,9 @@ export default function Dashboard() {
     fileHandleRef.current = null;
     lastSavedSnapshotRef.current = '';
     setSaveStatus('idle');
+
+    setNotesDraft(null);
+    setMetaDraft([]);
 
     (async () => {
       if (!rootHandle) {
@@ -154,7 +211,6 @@ export default function Dashboard() {
         return;
       }
 
-      // mantém o handle para autosave
       fileHandleRef.current = fileHandle;
 
       const file = await fileHandle.getFile();
@@ -169,18 +225,17 @@ export default function Dashboard() {
       }
 
       interface Investigation {
-        notesRich?: {
-          state?: unknown;
-        };
+        meta?: MetaItem[];
+        notesRich?: { state?: unknown };
       }
 
       const loaded = parsed.value as Investigation;
 
-      // carrega no editor e marca como "idle" (não sujo)
+      setMetaDraft(Array.isArray(loaded?.meta) ? loaded.meta : []);
       setNotesDraft(loaded?.notesRich?.state ?? null);
+
       setSaveStatus('idle');
 
-      // snapshot para evitar re-save do mesmo conteúdo logo de cara
       lastSavedSnapshotRef.current = JSON.stringify(parsed.value, null, 2);
 
       setState({
@@ -197,11 +252,9 @@ export default function Dashboard() {
     };
   }, [rootHandle, dirTree, selectedCasePath]);
 
-  // Debounce autosave
   useEffect(() => {
     if (state.status !== 'ready') return;
     if (saveStatus !== 'dirty') return;
-    if (notesDraft == null) return;
     if (!fileHandleRef.current) return;
 
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
@@ -210,7 +263,7 @@ export default function Dashboard() {
       (async () => {
         try {
           setSaveStatus('saving');
-          await saveNotesDraftToFile(notesDraft);
+          await saveDraftToFile({ notesState: notesDraft, meta: metaDraft });
           setSaveStatus('saved');
         } catch {
           setSaveStatus('error');
@@ -221,7 +274,47 @@ export default function Dashboard() {
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
-  }, [notesDraft, saveStatus, state.status]);
+  }, [notesDraft, metaDraft, saveStatus, state.status]);
+
+  useEffect(() => {
+    const idx = focusMetaIndexRef.current;
+    if (idx == null) return;
+
+    const el = metaInputRefs.current[idx];
+    if (!el) return;
+
+    focusMetaIndexRef.current = null;
+
+    window.setTimeout(() => {
+      el.focus();
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
+    }, 0);
+  }, [metaDraft]);
+
+  useEffect(() => {
+    metaDraft.forEach((item, idx) => {
+      const el = metaInputRefs.current[idx];
+      if (el instanceof HTMLInputElement) {
+        autosizeInput(el, item.value);
+      }
+    });
+  }, [metaDraft]);
+
+  useEffect(() => {
+    function onDocMouseDown(e: MouseEvent) {
+      if (!isMetaAddOpen) return;
+      const t = e.target;
+      if (!(t instanceof Node)) return;
+
+      const inside = metaAddRef.current?.contains(t) ?? false;
+      if (!inside) setIsMetaAddOpen(false);
+    }
+
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
+  }, [isMetaAddOpen]);
 
   async function handleCreateInvestigation() {
     if (!selectedCasePath) return;
@@ -253,13 +346,13 @@ export default function Dashboard() {
       }
 
       interface Investigation {
-        notesRich?: {
-          state?: unknown;
-        };
+        meta?: MetaItem[];
+        notesRich?: { state?: unknown };
       }
 
       const created = parsed.value as Investigation;
 
+      setMetaDraft(Array.isArray(created?.meta) ? created.meta : []);
       setNotesDraft(created?.notesRich?.state ?? null);
       setSaveStatus('idle');
 
@@ -275,7 +368,29 @@ export default function Dashboard() {
     }
   }
 
-  // UI (clean)
+  function addMetaItem(key: string) {
+    setMetaDraft((prev) => {
+      const next = [...prev, { key, value: '' }];
+      focusMetaIndexRef.current = next.length - 1;
+      return next;
+    });
+    setSaveStatus('dirty');
+    setIsMetaAddOpen(false);
+  }
+
+  function removeMetaItem(index: number) {
+    setMetaDraft((prev) => prev.filter((_, i) => i !== index));
+    setSaveStatus('dirty');
+  }
+
+  function updateMetaValue(index: number, value: string) {
+    setMetaDraft((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], value };
+      return next;
+    });
+    setSaveStatus('dirty');
+  }
 
   if (state.status === 'no-root') {
     return (
@@ -323,13 +438,13 @@ export default function Dashboard() {
         <h1 className='dashboard__title'>Investigação</h1>
 
         <div className='dashboard__meta'>
-          <div className='dashboard__meta-line'>
-            <span className='dashboard__meta-key'>Caso</span>
-            <span className='dashboard__meta-value'>{state.caseDirName}</span>
+          <div className='dashboard__row'>
+            <span className='dashboard__label'>CASO</span>
+            <span className='dashboard__value'>{state.caseDirName}</span>
           </div>
-          <div className='dashboard__meta-line'>
-            <span className='dashboard__meta-key'>Arquivo</span>
-            <span className='dashboard__meta-value'>{INVESTIGATION_FILE}</span>
+          <div className='dashboard__row'>
+            <span className='dashboard__label'>ARQUIVO</span>
+            <span className='dashboard__value'>{INVESTIGATION_FILE}</span>
           </div>
         </div>
 
@@ -355,9 +470,7 @@ export default function Dashboard() {
 
   if (state.status === 'ready') {
     interface Investigation {
-      notesRich?: {
-        state?: unknown;
-      };
+      notesRich?: { state?: unknown };
     }
 
     const investigation = state.json as Investigation;
@@ -365,24 +478,103 @@ export default function Dashboard() {
 
     return (
       <div className='dashboard'>
-        <h1 className='dashboard__title'>Investigação</h1>
+        <div className='dashboard__header'>
+          <h1 className='dashboard__title'>Investigação</h1>
 
-        <div className='dashboard__meta'>
-          <div className='dashboard__meta-line'>
-            <span className='dashboard__meta-key'>Caso</span>
-            <span className='dashboard__meta-value'>{state.caseDirName}</span>
-          </div>
-          <div className='dashboard__meta-line'>
-            <span className='dashboard__meta-key'>Arquivo</span>
-            <span className='dashboard__meta-value'>{INVESTIGATION_FILE}</span>
+          <div className='dashboard__header-actions' ref={metaAddRef}>
+            <button
+              type='button'
+              className='dashboard__btn'
+              onClick={() => setIsMetaAddOpen((v) => !v)}
+              aria-haspopup='menu'
+              aria-expanded={isMetaAddOpen}
+              title='Adicionar metadado'
+            >
+              Adicionar
+            </button>
+
+            {isMetaAddOpen && (
+              <div className='dashboard__meta-popover' role='menu' aria-label='Adicionar metadado'>
+                {metaSuggestions.map((k) => (
+                  <button
+                    key={k}
+                    type='button'
+                    className='dashboard__meta-popover-item'
+                    onClick={() => addMetaItem(k)}
+                  >
+                    {k}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className='dashboard__status'>
+              {saveStatus === 'saving' && 'Salvando…'}
+              {saveStatus === 'saved' && 'Salvo'}
+              {saveStatus === 'error' && 'Não foi possível salvar'}
+              {saveStatus === 'dirty' && 'Não salvo'}
+            </div>
           </div>
         </div>
 
-        <div className='dashboard__save-status'>
-          {saveStatus === 'saving' && 'Salvando…'}
-          {saveStatus === 'saved' && 'Salvo'}
-          {saveStatus === 'error' && 'Não foi possível salvar'}
-          {saveStatus === 'dirty' && 'Não salvo'}
+        <div className='dashboard__meta'>
+          <div className='dashboard__row'>
+            <span className='dashboard__label'>CASO</span>
+            <span className='dashboard__value'>{state.caseDirName}</span>
+          </div>
+
+          {metaDraft.length > 0 && (
+            <div className='dashboard__meta-list'>
+              {metaDraft.map((item, idx) => {
+                const isResumo = item.key === 'RESUMO';
+
+                return (
+                  <div key={`${item.key}-${idx}`} className='dashboard__row'>
+                    <span className='dashboard__label'>{item.key}</span>
+
+                    {isResumo ? (
+                      <textarea
+                        ref={(el) => {
+                          metaInputRefs.current[idx] = el;
+                        }}
+                        className='dashboard__field dashboard__field--textarea'
+                        rows={3}
+                        value={item.value}
+                        onChange={(e) => updateMetaValue(idx, e.target.value)}
+                        placeholder='Escreva um resumo curto…'
+                      />
+                    ) : (
+                      <input
+                        ref={(el) => {
+                          metaInputRefs.current[idx] = el;
+                          if (el) autosizeInput(el, item.value);
+                        }}
+                        className='dashboard__field'
+                        value={item.value}
+                        onChange={(e) => {
+                          autosizeInput(e.currentTarget, e.currentTarget.value);
+                          updateMetaValue(idx, e.target.value);
+                        }}
+                        placeholder='—'
+                      />
+                    )}
+
+                    <div className='dashboard__actions'>
+                      <button
+                        type='button'
+                        className='dashboard__icon-btn'
+                        onClick={() => removeMetaItem(idx)}
+                        title='Remover'
+                        aria-label='Remover'
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className='dashboard__section'>
