@@ -1,94 +1,83 @@
 @use '@/styles/global' as *;
 
 .dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: $space-16;
+  padding: $space-24;
+  max-width: 100%;
 }
 
 .dashboard--empty {
-  padding: $space-16;
+  padding-top: $space-32;
 }
 
 .dashboard__title {
-  font-size: $font-20;
-  font-weight: $font-weight-bold;
+  margin: 0 0 $space-12 0;
+  font-size: $font-24;
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.2px;
+  color: $color-text-dark;
 }
 
-.dashboard__subtitle {
-  color: $color-text-muted;
-  margin-top: $space-12;
+.dashboard__hint {
+  margin: 0 0 $space-16 0;
+  color: $color-text-dark-muted;
+  line-height: $line-height-16;
 }
 
-.dashboard__actions {
-  margin-top: $space-16;
+.dashboard__meta {
+  margin: 0 0 $space-20 0;
 }
 
-.dashboard__card {
-  background: $color-surface-alt;
-  border-radius: $radius-8;
-  padding: $space-16;
-  border: 1px solid $color-border;
-}
-
-.dashboard__row {
+.dashboard__meta-line {
   display: flex;
-  gap: $space-8;
   align-items: baseline;
-}
-
-.dashboard__label {
-  font-weight: $font-weight-bold;
-}
-
-.dashboard__value {
-  font-family: monospace;
-  word-break: break-all;
-}
-
-.dashboard__list {
-  display: flex;
-  flex-direction: column;
   gap: $space-8;
-  margin-top: $space-12;
+  padding: $space-4 0;
 }
 
-.dashboard__case-button {
-  display: flex;
+.dashboard__meta-key {
+  color: $color-text-dark;
+  font-size: $font-12;
+  min-width: 64px;
+}
+
+.dashboard__meta-value {
+  color: $color-text-muted;
+  font-size: $font-14;
+}
+
+.dashboard__section {
+  margin-top: $space-20;
+}
+
+.dashboard__primary {
+  display: inline-flex;
   align-items: center;
-  gap: $space-8;
 
-  width: 100%;
-  text-align: left;
-
-  padding: $space-12 $space-16;
+  height: $size-32;
+  padding: 0 $space-8;
   border-radius: $radius-8;
-  border: 1px solid $color-border;
 
-  background: $color-surface;
-  color: $color-bg;
+  font-size: $font-14;
+  font-weight: $font-weight-medium;
 
+  color: $color-text-dark;
+  background: transparent;
   cursor: pointer;
 
+  transition:
+    background 120ms ease,
+    opacity 120ms ease;
+
   &:hover {
-    background: $color-hover;
+    background: $color-action-hover;
+  }
+
+  &:active {
+    opacity: 0.8;
   }
 
   &:focus-visible {
-    outline: $space-2 solid $color-accent;
-    outline-offset: $space-2;
+    outline: none;
+    box-shadow: $focus-ring; // seu focus agora neutro
   }
-}
-
-.dashboard__pre {
-  margin-top: $space-12;
-  padding: $space-16;
-
-  border-radius: $radius-8;
-  border: 1px solid $color-border;
-
-  background: $color-surface;
-  color: $color-bg;
-
-  overflow: auto;
 }

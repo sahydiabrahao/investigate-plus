@@ -13,13 +13,7 @@ type LoadState =
   | { status: 'invalid-case-selected' }
   | { status: 'loading' }
   | { status: 'missing-file'; caseDirName: string }
-  | {
-      status: 'ready';
-      caseDirName: string;
-      fileHandle: FileSystemFileHandle;
-      text: string;
-      json: unknown;
-    }
+  | { status: 'ready'; caseDirName: string; json: unknown }
   | { status: 'error'; message: string };
 
 function safeJsonParse(text: string): { ok: true; value: unknown } | { ok: false; error: string } {
@@ -77,7 +71,6 @@ export default function Dashboard() {
   const { rootHandle, dirTree, selectedCasePath } = useWorkspace();
 
   const [state, setState] = useState<LoadState>({ status: 'idle' });
-
   const [notesDraft, setNotesDraft] = useState<unknown | null>(null);
 
   useEffect(() => {
@@ -133,14 +126,13 @@ export default function Dashboard() {
           state?: unknown;
         };
       }
+
       const loaded = parsed.value as Investigation;
       setNotesDraft(loaded?.notesRich?.state ?? null);
 
       setState({
         status: 'ready',
         caseDirName: caseNode.name,
-        fileHandle,
-        text,
         json: parsed.value,
       });
     })().catch((e) => {
@@ -184,14 +176,13 @@ export default function Dashboard() {
           state?: unknown;
         };
       }
+
       const created = parsed.value as Investigation;
       setNotesDraft(created?.notesRich?.state ?? null);
 
       setState({
         status: 'ready',
         caseDirName: caseNode.name,
-        fileHandle,
-        text,
         json: parsed.value,
       });
     } catch (e) {
@@ -199,14 +190,13 @@ export default function Dashboard() {
     }
   }
 
-  // UI
+  // UI (clean)
+
   if (state.status === 'no-root') {
     return (
       <div className='dashboard dashboard--empty'>
         <h1 className='dashboard__title'>Nenhuma pasta importada</h1>
-        <p className='dashboard__subtitle'>
-          Use o botão Import para escolher a pasta “investigando”.
-        </p>
+        <p className='dashboard__hint'>Use o botão Import para escolher a pasta “investigando”.</p>
       </div>
     );
   }
@@ -215,8 +205,8 @@ export default function Dashboard() {
     return (
       <div className='dashboard dashboard--empty'>
         <h1 className='dashboard__title'>Nenhum caso selecionado</h1>
-        <p className='dashboard__subtitle'>
-          Clique em uma pasta de caso (nível principal) na barra lateral.
+        <p className='dashboard__hint'>
+          Selecione um caso na barra lateral para abrir a investigação.
         </p>
       </div>
     );
@@ -226,9 +216,8 @@ export default function Dashboard() {
     return (
       <div className='dashboard dashboard--empty'>
         <h1 className='dashboard__title'>Seleção inválida</h1>
-        <p className='dashboard__subtitle'>
-          Selecione a pasta principal do caso (filha direta da pasta importada) para abrir a
-          investigação.
+        <p className='dashboard__hint'>
+          Selecione a pasta principal do caso (filha direta da pasta importada).
         </p>
       </div>
     );
@@ -237,10 +226,8 @@ export default function Dashboard() {
   if (state.status === 'loading') {
     return (
       <div className='dashboard'>
-        <h1 className='dashboard__title'>Carregando caso…</h1>
-        <div className='dashboard__card'>
-          <p className='dashboard__subtitle'>Procurando {INVESTIGATION_FILE}…</p>
-        </div>
+        <h1 className='dashboard__title'>Investigação</h1>
+        <p className='dashboard__hint'>Carregando…</p>
       </div>
     );
   }
@@ -250,26 +237,24 @@ export default function Dashboard() {
       <div className='dashboard'>
         <h1 className='dashboard__title'>Investigação</h1>
 
-        <div className='dashboard__card'>
-          <div className='dashboard__row'>
-            <span className='dashboard__label'>Caso</span>
-            <span className='dashboard__value'>{state.caseDirName}</span>
+        <div className='dashboard__meta'>
+          <div className='dashboard__meta-line'>
+            <span className='dashboard__meta-key'>Caso</span>
+            <span className='dashboard__meta-value'>{state.caseDirName}</span>
           </div>
-
-          <p className='dashboard__subtitle'>
-            Não foi encontrado o arquivo <strong>{INVESTIGATION_FILE}</strong> dentro desta pasta.
-          </p>
-
-          <div className='dashboard__actions'>
-            <button
-              type='button'
-              className='dashboard__case-button'
-              onClick={handleCreateInvestigation}
-            >
-              Criar nova investigação
-            </button>
+          <div className='dashboard__meta-line'>
+            <span className='dashboard__meta-key'>Arquivo</span>
+            <span className='dashboard__meta-value'>{INVESTIGATION_FILE}</span>
           </div>
         </div>
+
+        <p className='dashboard__hint'>
+          Arquivo não encontrado. Você pode criar uma investigação nova para este caso.
+        </p>
+
+        <button type='button' className='dashboard__primary' onClick={handleCreateInvestigation}>
+          Criar nova investigação
+        </button>
       </div>
     );
   }
@@ -278,9 +263,7 @@ export default function Dashboard() {
     return (
       <div className='dashboard'>
         <h1 className='dashboard__title'>Erro</h1>
-        <div className='dashboard__card'>
-          <p className='dashboard__subtitle'>{state.message}</p>
-        </div>
+        <p className='dashboard__hint'>{state.message}</p>
       </div>
     );
   }
@@ -291,6 +274,7 @@ export default function Dashboard() {
         state?: unknown;
       };
     }
+
     const investigation = state.json as Investigation;
     const initialNotesState = investigation?.notesRich?.state;
 
@@ -298,27 +282,21 @@ export default function Dashboard() {
       <div className='dashboard'>
         <h1 className='dashboard__title'>Investigação</h1>
 
-        <div className='dashboard__card'>
-          <div className='dashboard__row'>
-            <span className='dashboard__label'>Caso</span>
-            <span className='dashboard__value'>{state.caseDirName}</span>
+        <div className='dashboard__meta'>
+          <div className='dashboard__meta-line'>
+            <span className='dashboard__meta-key'>Caso</span>
+            <span className='dashboard__meta-value'>{state.caseDirName}</span>
           </div>
-          <div className='dashboard__row'>
-            <span className='dashboard__label'>Arquivo</span>
-            <span className='dashboard__value'>{INVESTIGATION_FILE}</span>
+          <div className='dashboard__meta-line'>
+            <span className='dashboard__meta-key'>Arquivo</span>
+            <span className='dashboard__meta-value'>{INVESTIGATION_FILE}</span>
           </div>
         </div>
 
-        <div className='dashboard__card'>
-          <div className='dashboard__row'>
-            <span className='dashboard__label'>Anotações</span>
-          </div>
-
+        <div className='dashboard__section'>
           <NotesRichEditor
             initialState={notesDraft ?? initialNotesState}
-            onChange={(nextState) => {
-              setNotesDraft(nextState);
-            }}
+            onChange={(nextState) => setNotesDraft(nextState)}
           />
         </div>
       </div>
