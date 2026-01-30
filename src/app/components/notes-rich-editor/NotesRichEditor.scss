@@ -1,0 +1,59 @@
+.notes-editor {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #2b3138;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.notes-editor__toolbar {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #272c32;
+
+  button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 4px 6px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+    }
+  }
+}
+
+.notes-editor__divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 6px;
+}
+
+.notes-editor__content {
+  min-height: 200px;
+  padding: 12px;
+  outline: none;
+  color: #fff;
+}
+
+.notes-editor__placeholder {
+  position: absolute;
+  padding: 12px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.notes-editor__bold {
+  font-weight: bold;
+}
+
+.notes-editor__italic {
+  font-style: italic;
+}
+
+.notes-editor__underline {
+  text-decoration: underline;
+}

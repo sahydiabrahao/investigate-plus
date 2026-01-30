@@ -1,9 +1,10 @@
 import './Dashboard.scss';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import type { DirNode } from '@/utils/read-directory-tree';
-
-const INVESTIGATION_FILE = 'investigacao.json';
+import { INVESTIGATION_FILE } from '@/constants/investigation.constants';
+import { createNewInvestigation } from '@/utils/create-investigation';
+import NotesRichEditor from '@/app/components/notes-rich-editor/NotesRichEditor';
 
 type LoadState =
   | { status: 'idle' }
@@ -12,7 +13,13 @@ type LoadState =
   | { status: 'invalid-case-selected' }
   | { status: 'loading' }
   | { status: 'missing-file'; caseDirName: string }
-  | { status: 'ready'; caseDirName: string; text: string; json: unknown }
+  | {
+      status: 'ready';
+      caseDirName: string;
+      fileHandle: FileSystemFileHandle;
+      text: string;
+      json: unknown;
+    }
   | { status: 'error'; message: string };
 
 function safeJsonParse(text: string): { ok: true; value: unknown } | { ok: false; error: string } {
@@ -54,17 +61,10 @@ async function tryGetInvestigationFile(
 
 async function createInvestigationFile(
   caseDir: FileSystemDirectoryHandle,
-  caseDirName: string,
 ): Promise<FileSystemFileHandle> {
   const fileHandle = await caseDir.getFileHandle(INVESTIGATION_FILE, { create: true });
 
-  const initial = {
-    caseId: caseDirName,
-    createdAt: new Date().toISOString(),
-    notes: '',
-    evidences: [],
-    tags: [],
-  };
+  const initial = createNewInvestigation();
 
   const writable = await fileHandle.createWritable();
   await writable.write(JSON.stringify(initial, null, 2));
@@ -77,6 +77,8 @@ export default function Dashboard() {
   const { rootHandle, dirTree, selectedCasePath } = useWorkspace();
 
   const [state, setState] = useState<LoadState>({ status: 'idle' });
+
+  const [notesDraft, setNotesDraft] = useState<unknown | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +128,21 @@ export default function Dashboard() {
         return;
       }
 
-      setState({ status: 'ready', caseDirName: caseNode.name, text, json: parsed.value });
+      interface Investigation {
+        notesRich?: {
+          state?: unknown;
+        };
+      }
+      const loaded = parsed.value as Investigation;
+      setNotesDraft(loaded?.notesRich?.state ?? null);
+
+      setState({
+        status: 'ready',
+        caseDirName: caseNode.name,
+        fileHandle,
+        text,
+        json: parsed.value,
+      });
     })().catch((e) => {
       setState({ status: 'error', message: e instanceof Error ? e.message : 'Erro inesperado.' });
     });
@@ -135,15 +151,6 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, [rootHandle, dirTree, selectedCasePath]);
-
-  const prettyJson = useMemo(() => {
-    if (state.status !== 'ready') return '';
-    try {
-      return JSON.stringify(state.json, null, 2);
-    } catch {
-      return state.text;
-    }
-  }, [state]);
 
   async function handleCreateInvestigation() {
     if (!selectedCasePath) return;
@@ -162,7 +169,7 @@ export default function Dashboard() {
     try {
       setState({ status: 'loading' });
 
-      const fileHandle = await createInvestigationFile(caseNode.handle, caseNode.name);
+      const fileHandle = await createInvestigationFile(caseNode.handle);
       const file = await fileHandle.getFile();
       const text = await file.text();
 
@@ -172,7 +179,21 @@ export default function Dashboard() {
         return;
       }
 
-      setState({ status: 'ready', caseDirName: caseNode.name, text, json: parsed.value });
+      interface Investigation {
+        notesRich?: {
+          state?: unknown;
+        };
+      }
+      const created = parsed.value as Investigation;
+      setNotesDraft(created?.notesRich?.state ?? null);
+
+      setState({
+        status: 'ready',
+        caseDirName: caseNode.name,
+        fileHandle,
+        text,
+        json: parsed.value,
+      });
     } catch (e) {
       setState({ status: 'error', message: e instanceof Error ? e.message : 'Erro inesperado.' });
     }
@@ -265,6 +286,14 @@ export default function Dashboard() {
   }
 
   if (state.status === 'ready') {
+    interface Investigation {
+      notesRich?: {
+        state?: unknown;
+      };
+    }
+    const investigation = state.json as Investigation;
+    const initialNotesState = investigation?.notesRich?.state;
+
     return (
       <div className='dashboard'>
         <h1 className='dashboard__title'>Investigação</h1>
@@ -282,12 +311,15 @@ export default function Dashboard() {
 
         <div className='dashboard__card'>
           <div className='dashboard__row'>
-            <span className='dashboard__label'>Conteúdo</span>
+            <span className='dashboard__label'>Anotações</span>
           </div>
 
-          <pre className='dashboard__pre'>
-            <code>{prettyJson}</code>
-          </pre>
+          <NotesRichEditor
+            initialState={notesDraft ?? initialNotesState}
+            onChange={(nextState) => {
+              setNotesDraft(nextState);
+            }}
+          />
         </div>
       </div>
     );
