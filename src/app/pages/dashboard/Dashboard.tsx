@@ -2,7 +2,11 @@ import './Dashboard.scss';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import type { DirNode } from '@/utils/read-directory-tree';
-import { INVESTIGATION_FILE, META_SUGGESTIONS } from '@/constants/investigation.constants';
+import {
+  INVESTIGATION_FILE,
+  META_ORDER,
+  META_SUGGESTIONS,
+} from '@/constants/investigation.constants';
 import { createNewInvestigation } from '@/utils/create-investigation';
 import NotesRichEditor from '@/app/components/notes-rich-editor/NotesRichEditor';
 
@@ -93,6 +97,24 @@ export default function Dashboard() {
 
   const metaSuggestions = useMemo(() => [...META_SUGGESTIONS], []);
 
+  const metaOrderIndex = useMemo(() => {
+    const map = new Map<string, number>();
+    META_ORDER.forEach((k, i) => map.set(k, i));
+    return map;
+  }, []);
+
+  function sortMeta(items: MetaItem[]) {
+    // stable: keep relative order for duplicates / same key
+    const indexed = items.map((it, originalIndex) => ({ it, originalIndex }));
+    indexed.sort((a, b) => {
+      const ai = metaOrderIndex.get(a.it.key) ?? Number.POSITIVE_INFINITY;
+      const bi = metaOrderIndex.get(b.it.key) ?? Number.POSITIVE_INFINITY;
+      if (ai !== bi) return ai - bi;
+      return a.originalIndex - b.originalIndex;
+    });
+    return indexed.map((x) => x.it);
+  }
+
   const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   function getMeasureCanvas(): HTMLCanvasElement {
@@ -113,7 +135,6 @@ export default function Dashboard() {
     ctx.font = font;
 
     const text = value && value.length > 0 ? value : '—';
-
     const measured = ctx.measureText(text).width;
 
     const paddingLeft = Number.parseFloat(style.paddingLeft || '0') || 0;
@@ -231,7 +252,9 @@ export default function Dashboard() {
 
       const loaded = parsed.value as Investigation;
 
-      setMetaDraft(Array.isArray(loaded?.meta) ? loaded.meta : []);
+      const rawMeta = Array.isArray(loaded?.meta) ? loaded.meta : [];
+      setMetaDraft(sortMeta(rawMeta));
+
       setNotesDraft(loaded?.notesRich?.state ?? null);
 
       setSaveStatus('idle');
@@ -250,7 +273,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [rootHandle, dirTree, selectedCasePath]);
+  }, [rootHandle, dirTree, selectedCasePath, metaOrderIndex]);
 
   useEffect(() => {
     if (state.status !== 'ready') return;
@@ -352,7 +375,9 @@ export default function Dashboard() {
 
       const created = parsed.value as Investigation;
 
-      setMetaDraft(Array.isArray(created?.meta) ? created.meta : []);
+      const rawMeta = Array.isArray(created?.meta) ? created.meta : [];
+      setMetaDraft(sortMeta(rawMeta));
+
       setNotesDraft(created?.notesRich?.state ?? null);
       setSaveStatus('idle');
 
@@ -370,16 +395,24 @@ export default function Dashboard() {
 
   function addMetaItem(key: string) {
     setMetaDraft((prev) => {
-      const next = [...prev, { key, value: '' }];
-      focusMetaIndexRef.current = next.length - 1;
+      const newItem: MetaItem = { key, value: '' };
+      const next = sortMeta([...prev, newItem]);
+
+      const newIndex = next.indexOf(newItem);
+      focusMetaIndexRef.current = newIndex >= 0 ? newIndex : next.length - 1;
+
       return next;
     });
+
     setSaveStatus('dirty');
     setIsMetaAddOpen(false);
   }
 
   function removeMetaItem(index: number) {
-    setMetaDraft((prev) => prev.filter((_, i) => i !== index));
+    setMetaDraft((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      return sortMeta(next);
+    });
     setSaveStatus('dirty');
   }
 
