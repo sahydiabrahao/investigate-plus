@@ -60,6 +60,7 @@
 .menu__item--active {
   background: $color-nav-active;
   color: $color-text;
+  border-left: 3px solid $color-accent;
 }
 
 .menu__icon {

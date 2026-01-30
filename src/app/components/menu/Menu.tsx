@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './Menu.scss';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 
@@ -101,7 +101,18 @@ function TreeItem({
 
   const isCaseCandidate = isDir && level === 1;
 
-  const [isOpen, setIsOpen] = useState(false);
+  const shouldAutoOpen = useMemo(() => {
+    if (!isDir) return false;
+    if (!selectedCasePath) return false;
+
+    return selectedCasePath === node.path || selectedCasePath.startsWith(`${node.path}/`);
+  }, [isDir, selectedCasePath, node.path]);
+
+  const [isOpen, setIsOpen] = useState<boolean>(shouldAutoOpen);
+
+  useEffect(() => {
+    if (shouldAutoOpen) setIsOpen(true);
+  }, [shouldAutoOpen]);
 
   const hasInvestigationFile =
     isCaseCandidate &&

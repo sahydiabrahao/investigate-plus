@@ -7,7 +7,12 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { loadDirectoryHandle, saveDirectoryHandle } from '@/storage';
+import {
+  loadDirectoryHandle,
+  loadLastCasePath,
+  saveDirectoryHandle,
+  saveLastCasePath,
+} from '@/storage';
 import { DirNode, scanDirectoryTree } from '@/utils/read-directory-tree';
 
 type WorkspaceContextValue = {
@@ -39,18 +44,25 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const selectCase = useCallback((path: string | null) => {
     setSelectedCasePath(path);
+    saveLastCasePath(path).catch(console.error);
   }, []);
 
   const buildTree = useCallback(
-    async (handle: FileSystemDirectoryHandle) => {
+    async (handle: FileSystemDirectoryHandle, desiredCasePath?: string | null) => {
       const ok = await requestPermission(handle);
       if (!ok) return;
 
       const tree = await scanDirectoryTree(handle);
       setDirTree(tree);
 
+      if (desiredCasePath && pathExistsInTree(tree, desiredCasePath)) {
+        setSelectedCasePath(desiredCasePath);
+        return;
+      }
+
       if (selectedCasePath && !pathExistsInTree(tree, selectedCasePath)) {
         setSelectedCasePath(null);
+        saveLastCasePath(null).catch(console.error);
       }
     },
     [selectedCasePath],
@@ -65,7 +77,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!ok) return;
 
       setRootHandle(saved);
-      await buildTree(saved);
+
+      const lastCasePath = await loadLastCasePath();
+      await buildTree(saved, lastCasePath);
     })().catch(console.error);
   }, [buildTree]);
 
@@ -75,16 +89,21 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     if (!ok) return;
 
     await saveDirectoryHandle(handle);
+
+    await saveLastCasePath(null);
+
     setRootHandle(handle);
     setSelectedCasePath(null);
 
-    await buildTree(handle);
+    await buildTree(handle, null);
   }, [buildTree]);
 
   const refreshTree = useCallback(async () => {
     if (!rootHandle) return;
-    await buildTree(rootHandle);
-  }, [rootHandle, buildTree]);
+
+    const desired = selectedCasePath ?? (await loadLastCasePath());
+    await buildTree(rootHandle, desired);
+  }, [rootHandle, buildTree, selectedCasePath]);
 
   const value = useMemo<WorkspaceContextValue>(
     () => ({
