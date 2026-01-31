@@ -8,6 +8,7 @@ type TreeNode =
       name: string;
       path: string;
       children?: TreeNode[] | undefined;
+      handle?: FileSystemDirectoryHandle;
     }
   | {
       type: 'file';
@@ -20,14 +21,31 @@ const INVESTIGATION_FILE = 'investigacao.json';
 
 function guessMimeType(fileName: string): string {
   const lower = fileName.toLowerCase();
+
   if (lower.endsWith('.txt')) return 'text/plain';
   if (lower.endsWith('.md')) return 'text/markdown';
   if (lower.endsWith('.json')) return 'application/json';
+
   if (lower.endsWith('.png')) return 'image/png';
   if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
   if (lower.endsWith('.gif')) return 'image/gif';
   if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.svg')) return 'image/svg+xml';
+
   if (lower.endsWith('.pdf')) return 'application/pdf';
+
+  if (lower.endsWith('.mp4')) return 'video/mp4';
+  if (lower.endsWith('.webm')) return 'video/webm';
+  if (lower.endsWith('.mov')) return 'video/quicktime';
+  if (lower.endsWith('.avi')) return 'video/x-msvideo';
+  if (lower.endsWith('.mkv')) return 'video/x-matroska';
+
+  if (lower.endsWith('.mp3')) return 'audio/mpeg';
+  if (lower.endsWith('.wav')) return 'audio/wav';
+  if (lower.endsWith('.ogg')) return 'audio/ogg';
+  if (lower.endsWith('.m4a')) return 'audio/mp4';
+  if (lower.endsWith('.flac')) return 'audio/flac';
+
   return 'application/octet-stream';
 }
 
@@ -40,21 +58,42 @@ async function openFileInNewTab(fileHandle: FileSystemFileHandle, fileName: stri
 
   const url = URL.createObjectURL(blob);
 
-  const opened = window.open(url, '_blank', 'noopener,noreferrer');
-
-  if (!opened) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.click();
-  }
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.click();
 
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
+function toRelativePathFromRoot(rootName: string, fullPath: string): string {
+  if (!fullPath) return '';
+  if (fullPath === rootName) return '';
+  const prefix = `${rootName}/`;
+  if (fullPath.startsWith(prefix)) return fullPath.slice(prefix.length);
+  return fullPath;
+}
+
+async function getFileHandleByRelativePath(
+  root: FileSystemDirectoryHandle,
+  relativePath: string,
+): Promise<FileSystemFileHandle> {
+  const parts = relativePath.split('/').filter(Boolean);
+  const fileName = parts.pop();
+  if (!fileName) throw new Error('Invalid path');
+
+  let current: FileSystemDirectoryHandle = root;
+
+  for (const dir of parts) {
+    current = await current.getDirectoryHandle(dir);
+  }
+
+  return await current.getFileHandle(fileName);
+}
+
 export function Menu() {
-  const { dirTree, selectedCasePath, selectCase } = useWorkspace();
+  const { dirTree, selectedCasePath, selectCase, rootHandle } = useWorkspace();
 
   return (
     <nav className='menu'>
@@ -77,6 +116,7 @@ export function Menu() {
               level={0}
               selectedCasePath={selectedCasePath}
               onSelectCase={selectCase}
+              rootHandle={rootHandle}
             />
           </ul>
         )}
@@ -90,11 +130,13 @@ function TreeItem({
   level,
   selectedCasePath,
   onSelectCase,
+  rootHandle,
 }: {
   node: TreeNode;
   level: number;
   selectedCasePath: string | null;
   onSelectCase: (path: string) => void;
+  rootHandle: FileSystemDirectoryHandle | null;
 }) {
   const isDir = node.type === 'directory';
   const visualLevel = Math.max(level - 1, 0);
@@ -120,7 +162,9 @@ function TreeItem({
       (child) => child.type === 'file' && child.name === INVESTIGATION_FILE,
     );
 
-  async function handleClick() {
+  async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    e.stopPropagation();
     if (isDir) {
       setIsOpen((prev) => !prev);
 
@@ -136,9 +180,20 @@ function TreeItem({
     if (node.handle) {
       try {
         await openFileInNewTab(node.handle, node.name);
+        return;
       } catch (e) {
-        console.error(e);
+        console.error('open by handle failed, fallback to path', e);
       }
+    }
+
+    if (!rootHandle) return;
+
+    try {
+      const rel = toRelativePathFromRoot(rootHandle.name, node.path);
+      const fh = await getFileHandleByRelativePath(rootHandle, rel);
+      await openFileInNewTab(fh, node.name);
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -162,7 +217,7 @@ function TreeItem({
         <button
           type='button'
           className={`menu__item ${isActiveCase ? 'menu__item--active' : ''}`}
-          onClick={handleClick}
+          onClick={(e) => handleClick(e)}
           aria-expanded={isDir ? isOpen : undefined}
           aria-current={isActiveCase ? 'true' : undefined}
         >
@@ -195,6 +250,7 @@ function TreeItem({
               level={level + 1}
               selectedCasePath={selectedCasePath}
               onSelectCase={onSelectCase}
+              rootHandle={rootHandle}
             />
           ))}
         </>
