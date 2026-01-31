@@ -1,8 +1,7 @@
 @use '@/styles/global' as *;
 
 .app-layout {
-  display: grid;
-  grid-template-columns: 70px 300px 1fr;
+  display: flex;
   height: 100vh;
   width: 100%;
   background: $color-bg;
