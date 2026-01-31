@@ -1,10 +1,10 @@
 export const INVESTIGATION_FILE = 'investigacao.json';
 
 export const META_ORDER = [
-  'IP',
-  'MC',
   'DATA',
   'CRIME',
+  'IP',
+  'MC',
   'COMUNICANTE',
   'VITIMA',
   'TESTEMUNHA',

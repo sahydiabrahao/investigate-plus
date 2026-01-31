@@ -1,3 +1,5 @@
+import { CaseStatus } from '@/constants/investigation.constants';
+
 export const INVESTIGATION_SCHEMA_VERSION = 1 as const;
 
 export type InvestigationSchemaVersion = typeof INVESTIGATION_SCHEMA_VERSION;
@@ -24,4 +26,5 @@ export type InvestigationJson = {
 
   createdAt: string;
   updatedAt: string;
+  status?: CaseStatus | null;
 };
