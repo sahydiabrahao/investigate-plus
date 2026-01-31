@@ -104,7 +104,6 @@ export default function Dashboard() {
   }, []);
 
   function sortMeta(items: MetaItem[]) {
-    // stable: keep relative order for duplicates / same key
     const indexed = items.map((it, originalIndex) => ({ it, originalIndex }));
     indexed.sort((a, b) => {
       const ai = metaOrderIndex.get(a.it.key) ?? Number.POSITIVE_INFINITY;
@@ -150,6 +149,13 @@ export default function Dashboard() {
 
     const clamped = Math.min(max, next);
     el.style.width = `${Math.round(clamped)}px`;
+  }
+
+  function autosizeTextarea(el: HTMLTextAreaElement) {
+    // reset to recompute correctly
+    el.style.height = '0px';
+    const next = el.scrollHeight;
+    el.style.height = `${next}px`;
   }
 
   async function saveDraftToFile(next: { notesState: unknown | null; meta: MetaItem[] }) {
@@ -319,8 +325,13 @@ export default function Dashboard() {
   useEffect(() => {
     metaDraft.forEach((item, idx) => {
       const el = metaInputRefs.current[idx];
+
       if (el instanceof HTMLInputElement) {
         autosizeInput(el, item.value);
+      }
+
+      if (el instanceof HTMLTextAreaElement) {
+        autosizeTextarea(el);
       }
     });
   }, [metaDraft]);
@@ -469,15 +480,10 @@ export default function Dashboard() {
     return (
       <div className='dashboard'>
         <h1 className='dashboard__title'>Investigação</h1>
-
         <div className='dashboard__meta'>
           <div className='dashboard__row'>
             <span className='dashboard__label'>CASO</span>
             <span className='dashboard__value'>{state.caseDirName}</span>
-          </div>
-          <div className='dashboard__row'>
-            <span className='dashboard__label'>ARQUIVO</span>
-            <span className='dashboard__value'>{INVESTIGATION_FILE}</span>
           </div>
         </div>
 
@@ -562,18 +568,25 @@ export default function Dashboard() {
                 const isResumo = item.key === 'RESUMO';
 
                 return (
-                  <div key={`${item.key}-${idx}`} className='dashboard__row'>
+                  <div
+                    key={`${item.key}-${idx}`}
+                    className={`dashboard__row ${isResumo ? 'dashboard__row--full' : ''}`}
+                  >
                     <span className='dashboard__label'>{item.key}</span>
 
                     {isResumo ? (
                       <textarea
                         ref={(el) => {
                           metaInputRefs.current[idx] = el;
+                          if (el) autosizeTextarea(el);
                         }}
                         className='dashboard__field dashboard__field--textarea'
-                        rows={3}
+                        rows={1}
                         value={item.value}
-                        onChange={(e) => updateMetaValue(idx, e.target.value)}
+                        onChange={(e) => {
+                          autosizeTextarea(e.currentTarget);
+                          updateMetaValue(idx, e.currentTarget.value);
+                        }}
                         placeholder='Escreva um resumo curto…'
                       />
                     ) : (
@@ -586,7 +599,7 @@ export default function Dashboard() {
                         value={item.value}
                         onChange={(e) => {
                           autosizeInput(e.currentTarget, e.currentTarget.value);
-                          updateMetaValue(idx, e.target.value);
+                          updateMetaValue(idx, e.currentTarget.value);
                         }}
                         placeholder='—'
                       />

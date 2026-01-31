@@ -20,7 +20,6 @@
   align-items: baseline;
   justify-content: space-between;
   gap: $space-12;
-  flex-wrap: wrap;
 
   margin: 0 0 $space-12 0;
 }
@@ -35,7 +34,12 @@
 
 .dashboard__header-actions {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-8;
+  flex-wrap: wrap;
 }
+
 .dashboard__btn {
   display: inline-flex;
   align-items: center;
@@ -81,6 +85,12 @@
   margin: 0 0 $space-12 0;
 }
 
+.dashboard__meta-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-12;
+}
+
 .dashboard__row {
   display: flex;
   align-items: baseline;
@@ -91,6 +101,12 @@
   flex: 0 1 auto;
   max-width: 100%;
 }
+
+.dashboard__row--full {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
 .dashboard__label {
   color: $color-text-dark;
   font-size: $font-12;
@@ -146,10 +162,17 @@
 }
 
 .dashboard__field--textarea {
+  flex: 1 1 100%;
+  min-width: 240px;
+  max-width: 100%;
+
   resize: none;
-  min-height: 54px;
+  overflow: hidden;
+
   line-height: $line-height-16;
-  flex-basis: 520px;
+
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 
 .dashboard__actions {
@@ -159,6 +182,7 @@
 
   flex: 0 0 auto;
 }
+
 .dashboard__icon-btn {
   width: $size-24;
   height: $size-24;
@@ -193,12 +217,6 @@
     outline: none;
     box-shadow: $focus-ring;
   }
-}
-
-.dashboard__meta-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-12;
 }
 
 .dashboard__meta-popover {
