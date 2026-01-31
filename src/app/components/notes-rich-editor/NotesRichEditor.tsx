@@ -29,6 +29,7 @@ import type { EditorState, LexicalEditor } from 'lexical';
 import { $createParagraphNode, $getRoot } from 'lexical';
 
 import { FileLinkNode } from '@/app/components/file-link-node/FileLinkNode';
+import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 
 type NotesRichEditorProps = {
   initialState?: unknown;
@@ -104,6 +105,7 @@ export default function NotesRichEditor({ initialState, onChange }: NotesRichEdi
         />
 
         <HistoryPlugin />
+        <TabIndentationPlugin />
 
         <OnChangePlugin
           onChange={(editorState: EditorState) => {
