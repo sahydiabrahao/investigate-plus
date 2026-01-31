@@ -286,3 +286,44 @@
 .dashboard__section {
   margin-top: $space-16;
 }
+
+.dashboard__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-8;
+
+  height: $size-40;
+  padding: 0 $space-14;
+  border-radius: $radius-10;
+
+  font-size: $font-14;
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.2px;
+
+  color: $color-text-dark;
+  background: $color-nav-active;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+
+  cursor: pointer;
+
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    opacity 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0.5px);
+    opacity: 0.95;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
