@@ -95,3 +95,39 @@
     background: $color-nav-hover;
   }
 }
+
+.menu__status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  color: $color-status-none;
+
+  svg {
+    width: $size-20;
+    height: $size-20;
+    display: block;
+  }
+
+  &[data-status='NONE'] {
+    color: $color-status-none;
+  }
+
+  &[data-status='PENDENTE'] {
+    color: $color-status-pending;
+  }
+
+  &[data-status='CONCLUIDO'] {
+    color: $color-status-completed;
+  }
+
+  &[data-status='URGENTE'] {
+    color: $color-status-urgent;
+  }
+
+  &[data-status='AGUARDANDO'] {
+    color: $color-status-waiting;
+  }
+}

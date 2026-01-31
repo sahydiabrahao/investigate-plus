@@ -102,7 +102,8 @@
   padding: $space-8;
 
   border-radius: $radius-8;
-  background: rgba(255, 255, 255, 0.92);
+
+  background: $color-bg;
   border: 1px solid rgba(17, 24, 39, 0.12);
   box-shadow: 0 8px 24px rgba(17, 24, 39, 0.1);
 
@@ -123,7 +124,7 @@
   cursor: pointer;
 
   &:hover {
-    background: rgba(17, 24, 39, 0.06);
+    background: $color-nav-active;
   }
 
   &:focus-visible {
@@ -147,7 +148,6 @@
   }
 }
 
-/* Symbols buttons */
 .notes-editor__symbol {
   height: $size-32;
   min-width: $size-32;
@@ -160,7 +160,7 @@
 
   cursor: pointer;
   background: transparent;
-  color: rgba(17, 24, 39, 0.85);
+  color: rgba(39, 17, 17, 0.85);
 
   &:hover {
     background: rgba(17, 24, 39, 0.06);
@@ -208,7 +208,7 @@
   padding: 4px 6px;
   font-size: 12px;
   line-height: 1.2;
-
+  color: $color-text;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -218,5 +218,5 @@
 }
 
 .notes-editor__popover--attachments button:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: $color-nav-active;
 }

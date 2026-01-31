@@ -25,6 +25,9 @@
 }
 
 .dashboard__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
   font-size: $font-24;
   font-weight: $font-weight-medium;
@@ -230,7 +233,7 @@
   padding: $space-6;
   border-radius: $radius-8;
 
-  background: rgba(255, 255, 255, 0.92);
+  background: $color-bg;
   backdrop-filter: blur(10px);
 
   border: 1px solid rgba(17, 24, 39, 0.08);
@@ -256,7 +259,7 @@
   font-weight: $font-weight-medium;
   letter-spacing: 0.2px;
 
-  color: $color-text-dark;
+  color: $color-text;
   background: transparent;
   cursor: pointer;
 
@@ -266,7 +269,7 @@
     color 120ms ease;
 
   &:hover {
-    background: rgba(17, 24, 39, 0.06);
+    background: $color-nav-active;
   }
 
   &:active {

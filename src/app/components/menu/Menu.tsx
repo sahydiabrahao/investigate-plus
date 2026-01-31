@@ -6,6 +6,12 @@ import {
   getFileHandleByRelativePath,
   toRelativePathFromRoot,
 } from '@/utils/open-file';
+import {
+  INVESTIGATION_FILE,
+  STATUS_SUGGESTIONS,
+  type CaseStatus,
+} from '@/constants/investigation.constants';
+import { CheckIcon, ReviewIcon, UrgentIcon, PendingIcon, WaitingIcon, NullIcon } from '@/app/icons';
 
 type TreeNode =
   | {
@@ -22,10 +28,87 @@ type TreeNode =
       handle?: FileSystemFileHandle;
     };
 
-const INVESTIGATION_FILE = 'investigacao.json';
+function statusDataValue(s: CaseStatus | null | undefined): string {
+  return s ?? 'NONE';
+}
+
+function renderStatusIcon(s: CaseStatus | null | undefined, size = 18) {
+  if (!s) return <NullIcon size={size} color='white' />;
+  if (s === 'PENDENTE') return <PendingIcon size={size} color='white' />;
+  if (s === 'ANALISAR') return <ReviewIcon size={size} />;
+  if (s === 'CONCLUIDO') return <CheckIcon size={size} color='white' />;
+  if (s === 'URGENTE') return <UrgentIcon size={size} color='white' />;
+  if (s === 'AGUARDANDO') return <WaitingIcon size={size} color='white' />;
+  return <NullIcon size={size} color='white' />;
+}
+
+function safeJsonParse(text: string): { ok: true; value: unknown } | { ok: false; error: string } {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch {
+    return { ok: false, error: 'JSON inválido (não foi possível fazer parse).' };
+  }
+}
+
+function isCaseStatus(value: unknown): value is CaseStatus {
+  return typeof value === 'string' && (STATUS_SUGGESTIONS as readonly string[]).includes(value);
+}
+
+async function readCaseStatusFromDir(
+  caseDirHandle: FileSystemDirectoryHandle,
+): Promise<CaseStatus | null> {
+  try {
+    const fh = await caseDirHandle.getFileHandle(INVESTIGATION_FILE);
+    const file = await fh.getFile();
+    const text = await file.text();
+
+    const parsed = safeJsonParse(text);
+    if (!parsed.ok) return null;
+
+    const json = parsed.value as { status?: unknown };
+    return isCaseStatus(json.status) ? json.status : null;
+  } catch {
+    return null;
+  }
+}
 
 export function Menu() {
   const { dirTree, selectedCasePath, selectCase, rootHandle } = useWorkspace();
+  const [statusByPath, setStatusByPath] = useState<Record<string, CaseStatus | null>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      if (!dirTree) {
+        setStatusByPath({});
+        return;
+      }
+
+      const rootChildren = (dirTree.children ?? []).filter((c) => c.type === 'directory') as Array<
+        TreeNode & { type: 'directory' }
+      >;
+
+      const entries = await Promise.all(
+        rootChildren.map(async (caseNode) => {
+          if (!caseNode.handle) return [caseNode.path, null] as const;
+          const st = await readCaseStatusFromDir(caseNode.handle);
+          return [caseNode.path, st] as const;
+        }),
+      );
+
+      if (cancelled) return;
+
+      const next: Record<string, CaseStatus | null> = {};
+      for (const [p, st] of entries) next[p] = st;
+
+      setStatusByPath(next);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dirTree]);
 
   return (
     <nav className='menu'>
@@ -49,6 +132,7 @@ export function Menu() {
               selectedCasePath={selectedCasePath}
               onSelectCase={selectCase}
               rootHandle={rootHandle}
+              statusByPath={statusByPath}
             />
           </ul>
         )}
@@ -63,12 +147,14 @@ function TreeItem({
   selectedCasePath,
   onSelectCase,
   rootHandle,
+  statusByPath,
 }: {
   node: TreeNode;
   level: number;
   selectedCasePath: string | null;
   onSelectCase: (path: string) => void;
   rootHandle: FileSystemDirectoryHandle | null;
+  statusByPath: Record<string, CaseStatus | null>;
 }) {
   const isDir = node.type === 'directory';
   const visualLevel = Math.max(level - 1, 0);
@@ -143,12 +229,14 @@ function TreeItem({
       })
     : [];
 
+  const caseStatus = isCaseCandidate ? (statusByPath[node.path] ?? null) : null;
+
   return (
     <>
       <li className='menu__row' style={{ '--level': visualLevel } as React.CSSProperties}>
         <button
           type='button'
-          className={`menu__item ${isActiveCase ? 'menu__item--active' : ''}`}
+          className={`menu__item ${isActiveCase ? 'menu__item--active' : ''}`.trim()}
           onClick={(e) => handleClick(e)}
           aria-expanded={isDir ? isOpen : undefined}
           aria-current={isActiveCase ? 'true' : undefined}
@@ -156,6 +244,12 @@ function TreeItem({
           <span className='menu__caret'>{isDir ? (isOpen ? '▾' : '▸') : ''}</span>
           <span className='menu__icon'>{isDir ? '📁' : '📄'}</span>
           <span className='menu__label'>{node.name}</span>
+
+          {isCaseCandidate && (
+            <span className='menu__status' data-status={statusDataValue(caseStatus)} aria-hidden>
+              {renderStatusIcon(caseStatus, 18)}
+            </span>
+          )}
         </button>
       </li>
 
@@ -183,6 +277,7 @@ function TreeItem({
               selectedCasePath={selectedCasePath}
               onSelectCase={onSelectCase}
               rootHandle={rootHandle}
+              statusByPath={statusByPath}
             />
           ))}
         </>

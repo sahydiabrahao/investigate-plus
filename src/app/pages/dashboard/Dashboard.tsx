@@ -7,8 +7,10 @@ import {
   META_ORDER,
   META_SUGGESTIONS,
 } from '@/constants/investigation.constants';
+import type { CaseStatus } from '@/constants/investigation.constants';
 import { createNewInvestigation } from '@/utils/create-investigation';
 import NotesRichEditor from '@/app/components/notes-rich-editor/NotesRichEditor';
+import StatusButton from '@/app/components/status-button/StatusButton';
 
 type LoadState =
   | { status: 'idle' }
@@ -76,12 +78,13 @@ async function createInvestigationFile(
 }
 
 export default function Dashboard() {
-  const { rootHandle, dirTree, selectedCasePath } = useWorkspace();
+  const { rootHandle, dirTree, selectedCasePath, refreshTree } = useWorkspace();
 
   const [state, setState] = useState<LoadState>({ status: 'idle' });
 
   const [notesDraft, setNotesDraft] = useState<unknown | null>(null);
   const [metaDraft, setMetaDraft] = useState<MetaItem[]>([]);
+  const [statusDraft, setStatusDraft] = useState<CaseStatus | null>(null);
 
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const saveTimerRef = useRef<number | null>(null);
@@ -152,13 +155,16 @@ export default function Dashboard() {
   }
 
   function autosizeTextarea(el: HTMLTextAreaElement) {
-    // reset to recompute correctly
     el.style.height = '0px';
     const next = el.scrollHeight;
     el.style.height = `${next}px`;
   }
 
-  async function saveDraftToFile(next: { notesState: unknown | null; meta: MetaItem[] }) {
+  async function saveDraftToFile(next: {
+    notesState: unknown | null;
+    meta: MetaItem[];
+    status: CaseStatus | null;
+  }) {
     const fh = fileHandleRef.current;
     if (!fh) return;
 
@@ -171,6 +177,7 @@ export default function Dashboard() {
     interface Investigation {
       meta?: MetaItem[];
       notesRich?: { state?: unknown };
+      status?: CaseStatus;
       updatedAt?: string;
     }
 
@@ -180,6 +187,12 @@ export default function Dashboard() {
 
     json.notesRich = json.notesRich ?? {};
     json.notesRich.state = next.notesState ?? null;
+
+    if (next.status) {
+      json.status = next.status;
+    } else {
+      if ('status' in json) delete json.status;
+    }
 
     json.updatedAt = new Date().toISOString();
 
@@ -194,6 +207,31 @@ export default function Dashboard() {
     lastSavedSnapshotRef.current = nextText;
   }
 
+  async function handleChangeStatus(next: CaseStatus | null) {
+    setStatusDraft(next);
+
+    if (state.status !== 'ready') {
+      setSaveStatus('dirty');
+      return;
+    }
+
+    if (!fileHandleRef.current) {
+      setSaveStatus('dirty');
+      return;
+    }
+
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+
+    try {
+      setSaveStatus('saving');
+      await saveDraftToFile({ notesState: notesDraft, meta: metaDraft, status: next });
+      setSaveStatus('saved');
+      await refreshTree();
+    } catch {
+      setSaveStatus('error');
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -203,6 +241,7 @@ export default function Dashboard() {
 
     setNotesDraft(null);
     setMetaDraft([]);
+    setStatusDraft(null);
 
     (async () => {
       if (!rootHandle) {
@@ -254,6 +293,7 @@ export default function Dashboard() {
       interface Investigation {
         meta?: MetaItem[];
         notesRich?: { state?: unknown };
+        status?: CaseStatus;
       }
 
       const loaded = parsed.value as Investigation;
@@ -262,6 +302,7 @@ export default function Dashboard() {
       setMetaDraft(sortMeta(rawMeta));
 
       setNotesDraft(loaded?.notesRich?.state ?? null);
+      setStatusDraft(loaded?.status ?? null);
 
       setSaveStatus('idle');
 
@@ -292,7 +333,7 @@ export default function Dashboard() {
       (async () => {
         try {
           setSaveStatus('saving');
-          await saveDraftToFile({ notesState: notesDraft, meta: metaDraft });
+          await saveDraftToFile({ notesState: notesDraft, meta: metaDraft, status: statusDraft });
           setSaveStatus('saved');
         } catch {
           setSaveStatus('error');
@@ -303,7 +344,7 @@ export default function Dashboard() {
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
-  }, [notesDraft, metaDraft, saveStatus, state.status]);
+  }, [notesDraft, metaDraft, statusDraft, saveStatus, state.status]);
 
   useEffect(() => {
     const idx = focusMetaIndexRef.current;
@@ -382,6 +423,7 @@ export default function Dashboard() {
       interface Investigation {
         meta?: MetaItem[];
         notesRich?: { state?: unknown };
+        status?: CaseStatus;
       }
 
       const created = parsed.value as Investigation;
@@ -390,6 +432,8 @@ export default function Dashboard() {
       setMetaDraft(sortMeta(rawMeta));
 
       setNotesDraft(created?.notesRich?.state ?? null);
+      setStatusDraft(created?.status ?? null);
+
       setSaveStatus('idle');
 
       lastSavedSnapshotRef.current = JSON.stringify(parsed.value, null, 2);
@@ -518,7 +562,11 @@ export default function Dashboard() {
     return (
       <div className='dashboard'>
         <div className='dashboard__header'>
-          <h1 className='dashboard__title'>{state.caseDirName}</h1>
+          <div className='dashboard__title-wrap'>
+            <h1 className='dashboard__title'>{state.caseDirName}</h1>
+            <StatusButton value={statusDraft} onChange={handleChangeStatus} />
+          </div>
+
           <div className='dashboard__header-actions' ref={metaAddRef}>
             <button
               type='button'

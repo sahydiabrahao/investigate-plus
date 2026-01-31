@@ -22,4 +22,12 @@ export const META_DEFAULTS = ['DATA', 'CRIME', 'VITIMA', 'RESUMO'] as const;
 
 export const META_DATE_KEY: MetaKey = 'DATA';
 
-export const STATUS_SUGGESTIONS = ['PENDENTE', 'CONCLUIDO', 'URGENTE', 'AGUARDANDO'] as const;
+export const STATUS_SUGGESTIONS = [
+  'PENDENTE',
+  'AGUARDANDO',
+  'ANALISAR',
+  'CONCLUIDO',
+  'URGENTE',
+] as const;
+
+export type CaseStatus = (typeof STATUS_SUGGESTIONS)[number];

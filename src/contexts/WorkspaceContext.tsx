@@ -13,17 +13,27 @@ import {
   saveDirectoryHandle,
   saveLastCasePath,
 } from '@/storage';
-import { DirNode, scanDirectoryTree } from '@/utils/read-directory-tree';
+import {
+  type DirNode as BaseDirNode,
+  type FileNode,
+  scanDirectoryTree,
+} from '@/utils/read-directory-tree';
+import { INVESTIGATION_FILE, type CaseStatus } from '@/constants/investigation.constants';
 
 type WorkspaceContextValue = {
   rootHandle: FileSystemDirectoryHandle | null;
-  dirTree: DirNode | null;
+  dirTree: BaseDirNode | null;
 
   selectedCasePath: string | null;
   selectCase: (path: string | null) => void;
 
   importFolder: () => Promise<void>;
   refreshTree: () => Promise<void>;
+};
+
+type DirNodeWithStatus = Omit<BaseDirNode, 'children'> & {
+  status?: CaseStatus | null;
+  children: Array<DirNodeWithStatus | FileNode>;
 };
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -36,9 +46,53 @@ async function requestPermission(handle: FileSystemDirectoryHandle): Promise<boo
   return next === 'granted';
 }
 
+function safeJsonParse(text: string): { ok: true; value: unknown } | { ok: false } {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch {
+    return { ok: false };
+  }
+}
+
+async function readCaseStatus(dirHandle: FileSystemDirectoryHandle): Promise<CaseStatus | null> {
+  try {
+    const fh = await dirHandle.getFileHandle(INVESTIGATION_FILE);
+    const file = await fh.getFile();
+    const text = await file.text();
+
+    const parsed = safeJsonParse(text);
+    if (!parsed.ok) return null;
+
+    const json = parsed.value as { status?: unknown };
+    const status = json?.status;
+
+    if (
+      status === 'PENDENTE' ||
+      status === 'CONCLUIDO' ||
+      status === 'URGENTE' ||
+      status === 'AGUARDANDO'
+    ) {
+      return status;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function attachStatusesToCases(tree: DirNodeWithStatus): Promise<void> {
+  const tasks = tree.children.map(async (child) => {
+    if (child.type !== 'directory') return;
+    child.status = await readCaseStatus(child.handle);
+  });
+
+  await Promise.all(tasks);
+}
+
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [rootHandle, setRootHandle] = useState<FileSystemDirectoryHandle | null>(null);
-  const [dirTree, setDirTree] = useState<DirNode | null>(null);
+  const [dirTree, setDirTree] = useState<BaseDirNode | null>(null);
 
   const [selectedCasePath, setSelectedCasePath] = useState<string | null>(null);
 
@@ -52,7 +106,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       const ok = await requestPermission(handle);
       if (!ok) return;
 
-      const tree = await scanDirectoryTree(handle);
+      const tree = (await scanDirectoryTree(handle)) as DirNodeWithStatus;
+
+      await attachStatusesToCases(tree);
+
       setDirTree(tree);
 
       if (desiredCasePath && pathExistsInTree(tree, desiredCasePath)) {
@@ -120,7 +177,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 
-function pathExistsInTree(tree: DirNode, targetPath: string): boolean {
+function pathExistsInTree(tree: BaseDirNode, targetPath: string): boolean {
   if (tree.path === targetPath) return true;
 
   for (const child of tree.children) {
