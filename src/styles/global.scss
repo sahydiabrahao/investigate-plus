@@ -91,6 +91,7 @@ $size-20: 20px;
 $size-24: 24px;
 $size-32: 32px;
 $size-40: 40px;
+$size-44: 44px;
 $size-48: 48px;
 
 /* =================================================
@@ -116,6 +117,7 @@ $focus-ring: 0 0 0 3px rgba(17, 24, 39, 0.25);
 html,
 body {
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {

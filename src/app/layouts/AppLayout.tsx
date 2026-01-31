@@ -3,15 +3,20 @@ import { useEffect, useRef, useState } from 'react';
 import { Menu } from '@/app/components/menu/Menu';
 import { BottomMenu } from '@/app/components/bottom-menu/BottomMenu';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import CaseListView from '@/app/components/case-list-view/CaseListView';
 import './AppLayout.scss';
+import { ChevronLeftIcon } from '../icons';
 
 const SIDEBAR_MIN = 300;
 const SIDEBAR_MAX = 520;
 
 export function AppLayout() {
-  const { importFolder, refreshTree, rootHandle } = useWorkspace();
+  const { importFolder, refreshTree, rootHandle, dirTree } = useWorkspace();
+
   const [sidebarWidth, setSidebarWidth] = useState<number>(SIDEBAR_MIN);
   const isDraggingRef = useRef(false);
+
+  const [isCasesOpen, setIsCasesOpen] = useState(false);
 
   useEffect(() => {
     function onMove(e: MouseEvent) {
@@ -36,6 +41,10 @@ export function AppLayout() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!dirTree) setIsCasesOpen(false);
+  }, [dirTree]);
+
   function startDrag() {
     isDraggingRef.current = true;
     document.body.style.cursor = 'col-resize';
@@ -59,6 +68,21 @@ export function AppLayout() {
       <main className='app-layout__content'>
         <Outlet />
       </main>
+
+      {!isCasesOpen && (
+        <button
+          type='button'
+          className='app-layout__cases-fab'
+          onClick={() => setIsCasesOpen(true)}
+          disabled={!dirTree}
+          aria-label='Ver todos os casos'
+          title='Casos'
+        >
+          <ChevronLeftIcon size={18} />
+        </button>
+      )}
+
+      <CaseListView open={isCasesOpen} onClose={() => setIsCasesOpen(false)} />
     </div>
   );
 }

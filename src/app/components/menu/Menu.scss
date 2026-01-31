@@ -119,6 +119,10 @@
     color: $color-status-pending;
   }
 
+  &[data-status='ANALISAR'] {
+    color: $color-status-review;
+  }
+
   &[data-status='CONCLUIDO'] {
     color: $color-status-completed;
   }

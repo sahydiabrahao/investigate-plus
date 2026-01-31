@@ -24,10 +24,10 @@ export const META_DATE_KEY: MetaKey = 'DATA';
 
 export const STATUS_SUGGESTIONS = [
   'PENDENTE',
-  'AGUARDANDO',
   'ANALISAR',
   'CONCLUIDO',
   'URGENTE',
+  'AGUARDANDO',
 ] as const;
 
 export type CaseStatus = (typeof STATUS_SUGGESTIONS)[number];
