@@ -187,3 +187,36 @@
 .notes-editor__paragraph {
   margin: 0 0 $space-8 0;
 }
+
+.notes-editor__popover--attachments {
+  display: flex;
+  flex-direction: column;
+
+  max-height: 260px;
+  min-width: 220px;
+
+  overflow-y: auto;
+  padding: 4px;
+
+  gap: 2px;
+}
+
+.notes-editor__popover--attachments button {
+  display: flex;
+  align-items: center;
+
+  padding: 4px 6px;
+  font-size: 12px;
+  line-height: 1.2;
+
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  border-radius: 4px;
+}
+
+.notes-editor__popover--attachments button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}

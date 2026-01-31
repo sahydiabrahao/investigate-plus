@@ -518,8 +518,7 @@ export default function Dashboard() {
     return (
       <div className='dashboard'>
         <div className='dashboard__header'>
-          <h1 className='dashboard__title'>Investigação</h1>
-
+          <h1 className='dashboard__title'>{state.caseDirName}</h1>
           <div className='dashboard__header-actions' ref={metaAddRef}>
             <button
               type='button'
@@ -557,11 +556,6 @@ export default function Dashboard() {
         </div>
 
         <div className='dashboard__meta'>
-          <div className='dashboard__row'>
-            <span className='dashboard__label'>CASO</span>
-            <span className='dashboard__value'>{state.caseDirName}</span>
-          </div>
-
           {metaDraft.length > 0 && (
             <div className='dashboard__meta-list'>
               {metaDraft.map((item, idx) => {
