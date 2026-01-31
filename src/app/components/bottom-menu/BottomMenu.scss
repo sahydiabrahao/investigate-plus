@@ -1,0 +1,35 @@
+@use '@/styles/global' as *;
+
+.bottom-menu {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.bottom-menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $size-32;
+  height: $size-32;
+  font-size: $font-16;
+  color: $color-text-muted;
+  background: transparent;
+  border-radius: $radius-8;
+  cursor: pointer;
+
+  &:hover:enabled {
+    background: $color-hover;
+    color: $color-text;
+  }
+
+  &:active:enabled {
+    background: $color-surface-alt;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

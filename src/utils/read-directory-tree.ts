@@ -1,3 +1,5 @@
+import { INVESTIGATION_FILE, type CaseStatus } from '@/constants/investigation.constants';
+
 export type FileNode = {
   type: 'file';
   name: string;
@@ -9,58 +11,61 @@ export type DirNode = {
   type: 'directory';
   name: string;
   path: string;
-  children: NodeItem[];
+  handle: FileSystemDirectoryHandle;
+  children: Array<DirNode | FileNode>;
+  status: CaseStatus | null;
 };
 
-export type NodeItem = FileNode | DirNode;
+async function readCaseStatus(caseDir: FileSystemDirectoryHandle): Promise<CaseStatus | null> {
+  try {
+    const fh = await caseDir.getFileHandle(INVESTIGATION_FILE);
+    const file = await fh.getFile();
+    const text = await file.text();
+
+    const parsed = JSON.parse(text) as { status?: CaseStatus };
+    return parsed?.status ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function scanDirectoryTree(
-  dirHandle: FileSystemDirectoryHandle,
-  basePath = ''
+  handle: FileSystemDirectoryHandle,
+  basePath = '',
+  depth = 0,
 ): Promise<DirNode> {
-  const path = basePath ? `${basePath}/${dirHandle.name}` : dirHandle.name;
-  const children: NodeItem[] = [];
+  const name = handle.name;
+  const path = basePath ? `${basePath}/${name}` : name;
 
-  const entries = dirHandle.entries() as AsyncIterable<[string, FileSystemHandle]>;
-  const dirs: [string, FileSystemDirectoryHandle][] = [];
-  const files: [string, FileSystemFileHandle][] = [];
+  const children: Array<DirNode | FileNode> = [];
 
-  for await (const [name, handle] of entries) {
-    if (handle.kind === 'directory') {
-      dirs.push([name, handle as FileSystemDirectoryHandle]);
-    } else {
-      files.push([name, handle as FileSystemFileHandle]);
+  let status: CaseStatus | null = null;
+  if (depth === 1) {
+    status = await readCaseStatus(handle);
+  }
+
+  for await (const entry of handle.values()) {
+    if (entry.kind === 'directory') {
+      const dir = await scanDirectoryTree(entry, path, depth + 1);
+      children.push(dir);
+    }
+
+    if (entry.kind === 'file') {
+      children.push({
+        type: 'file',
+        name: entry.name,
+        path: `${path}/${entry.name}`,
+        handle: entry,
+      });
     }
   }
 
-  dirs.sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }));
-  files.sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }));
-
-  for (const [name, fileHandle] of files) {
-    const childPath = `${path}/${name}`;
-    const fileNode: FileNode = {
-      type: 'file',
-      name,
-      path: childPath,
-      handle: fileHandle,
-    };
-    children.push(fileNode);
-  }
-
-  for (const [, sub] of dirs) {
-    children.push(await scanDirectoryTree(sub, path));
-  }
-
-  return { type: 'directory', name: dirHandle.name, path, children };
-}
-
-export function renderTreeAsLines(node: NodeItem, depth = 0, out: string[] = []): string[] {
-  const hyphens = depth > 0 ? '-'.repeat(depth) : '';
-  if (node.type === 'file') {
-    out.push(`${hyphens}📄${node.name}`);
-    return out;
-  }
-  out.push(`${hyphens}📁${node.name}`);
-  for (const child of node.children) renderTreeAsLines(child, depth + 1, out);
-  return out;
+  return {
+    type: 'directory',
+    name,
+    path,
+    handle,
+    children,
+    status,
+  };
 }

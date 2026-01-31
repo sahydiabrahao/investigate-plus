@@ -1,0 +1,165 @@
+@use '@/styles/global' as *;
+
+.status-button {
+  position: relative;
+  display: inline-flex;
+}
+
+.status-button__trigger {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: $space-2;
+  border-radius: $radius-8;
+
+  cursor: pointer;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &:active {
+    background: $color-hover;
+  }
+
+  &:focus-visible {
+    box-shadow: $focus-ring;
+    border-radius: $radius-4;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.status-button__trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: $color-status-none;
+
+  &[data-status='NONE'] {
+    color: $color-status-none;
+  }
+
+  &[data-status='PENDENTE'] {
+    color: $color-status-pending;
+  }
+
+  &[data-status='ANALISAR'] {
+    color: $color-status-review;
+  }
+
+  &[data-status='CONCLUIDO'] {
+    color: $color-status-completed;
+  }
+
+  &[data-status='URGENTE'] {
+    color: $color-status-urgent;
+  }
+
+  &[data-status='AGUARDANDO'] {
+    color: $color-status-waiting;
+  }
+}
+
+.status-button__popover {
+  position: absolute;
+  top: calc(100% + $space-8);
+  right: 0;
+
+  min-width: 220px;
+  max-height: 280px;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  padding: $space-6;
+
+  border-radius: $radius-12;
+  border: 1px solid $color-border;
+
+  background: $color-bg;
+
+  z-index: 50;
+}
+
+.status-button__item {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: $space-10;
+
+  padding: $space-6 $space-8;
+  border-radius: $radius-12;
+
+  cursor: pointer;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &[data-selected='true'] {
+    background: $color-hover;
+  }
+
+  &:focus-visible {
+    box-shadow: $focus-ring;
+    border-radius: $radius-8;
+  }
+}
+
+.status-button__item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: $color-status-none;
+
+  svg {
+    width: $size-24;
+    height: $size-24;
+  }
+
+  &[data-status='NONE'] {
+    color: $color-status-none;
+  }
+
+  &[data-status='PENDENTE'] {
+    color: $color-status-pending;
+  }
+
+  &[data-status='ANALISAR'] {
+    color: $color-status-review;
+  }
+
+  &[data-status='CONCLUIDO'] {
+    color: $color-status-completed;
+  }
+
+  &[data-status='URGENTE'] {
+    color: $color-status-urgent;
+  }
+
+  &[data-status='AGUARDANDO'] {
+    color: $color-status-waiting;
+  }
+}
+
+.status-button__item-label {
+  font-size: $font-12;
+  line-height: $line-height-14;
+  font-weight: $font-weight-medium;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  color: $color-text;
+}

@@ -1,0 +1,341 @@
+@use '@/styles/global' as *;
+
+.case-list {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+
+  overflow: hidden;
+}
+
+.case-list__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.case-list__panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+
+  width: min(50vw, 860px);
+  min-width: 420px;
+  max-width: 92vw;
+
+  background: $color-bg;
+  border-left: 1px solid $color-border;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  transform: translateX(0);
+  animation: caseListIn 140ms ease-out;
+}
+
+@keyframes caseListIn {
+  from {
+    transform: translateX(12px);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* -------------------------------------------------
+   A11y: botão invisível só para foco/ESC
+------------------------------------------------- */
+.case-list__sr-close {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* -------------------------------------------------
+   Filter Bar (modo de exibição + limpar)
+------------------------------------------------- */
+.case-list__filters {
+  flex-shrink: 0;
+  padding: $space-12;
+  border-bottom: 1px solid $color-border;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.case-list__filters-row {
+  display: flex;
+  align-items: end;
+  gap: $space-10;
+}
+
+.case-list__field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+  min-width: 0;
+}
+
+.case-list__field--grow {
+  flex: 1;
+}
+
+.case-list__label {
+  font-size: $font-12;
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.06em;
+  color: $color-text-muted;
+}
+
+.case-list__select {
+  width: 100%;
+  min-width: 0;
+  height: $size-40;
+  padding: $space-0 $space-12;
+  border-radius: $radius-12;
+
+  border: 1px solid $color-border;
+  background: rgba(255, 255, 255, 0.03);
+  color: $color-text;
+
+  cursor: pointer;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &:focus-visible {
+    box-shadow: $focus-ring;
+  }
+
+  optgroup {
+    background: $color-bg;
+    color: $color-text-muted;
+  }
+
+  option {
+    background: $color-bg;
+    color: $color-text;
+  }
+}
+
+.case-list__clear {
+  all: unset;
+  height: $size-40;
+  padding: $space-0 $space-12;
+  border-radius: $radius-12;
+
+  border: 1px solid $color-border;
+  background: rgba(255, 255, 255, 0.03);
+  color: $color-text;
+
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    box-shadow: $focus-ring;
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    cursor: default;
+    opacity: 0.55;
+    transform: none;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+  }
+}
+
+/* -------------------------------------------------
+   Content list
+------------------------------------------------- */
+.case-list__content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: $space-12;
+}
+
+.case-list__empty {
+  padding: $space-12;
+  color: $color-text-muted;
+  font-size: $font-14;
+}
+
+.case-list__items {
+  margin: $space-0;
+  padding: $space-0;
+  list-style: none;
+
+  display: flex;
+  flex-direction: column;
+  gap: $space-10;
+}
+
+.case-list__card {
+  all: unset;
+  box-sizing: border-box;
+
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid $color-border;
+  border-radius: $radius-12;
+
+  background: rgba(255, 255, 255, 0.03);
+  padding: $space-12;
+  cursor: pointer;
+
+  overflow: hidden;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &:focus-visible {
+    box-shadow: $focus-ring;
+    border-radius: $radius-12;
+  }
+}
+
+.case-list__card-top {
+  display: flex;
+  align-items: center;
+  gap: $space-10;
+  min-width: 0;
+}
+
+.case-list__name {
+  flex: 1;
+  min-width: 0;
+  color: $color-text;
+
+  font-size: $font-14;
+  font-weight: $font-weight-medium;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.case-list__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  color: $color-status-none;
+
+  svg {
+    width: $size-20;
+    height: $size-20;
+    display: block;
+  }
+
+  &[data-status='NONE'] {
+    color: $color-status-none;
+  }
+  &[data-status='PENDENTE'] {
+    color: $color-status-pending;
+  }
+  &[data-status='ANALISAR'] {
+    color: $color-status-review;
+  }
+  &[data-status='CONCLUIDO'] {
+    color: $color-status-completed;
+  }
+  &[data-status='URGENTE'] {
+    color: $color-status-urgent;
+  }
+  &[data-status='AGUARDANDO'] {
+    color: $color-status-waiting;
+  }
+}
+
+.case-list__meta {
+  margin-top: $space-10;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-8;
+
+  min-width: 0;
+  overflow: hidden;
+}
+
+.case-list__pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: $space-8;
+
+  padding: 6px 10px;
+  border: 1px solid $color-border;
+  border-radius: $radius-12;
+
+  background: rgba(255, 255, 255, 0.02);
+
+  max-width: 100%;
+  min-width: 0;
+}
+
+.case-list__pill-key {
+  color: $color-text-muted;
+  font-size: $font-12;
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.06em;
+
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.case-list__pill-value {
+  color: $color-text;
+  font-size: $font-13;
+  line-height: $line-height-15;
+
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* -------------------------------------------------
+   Responsive
+------------------------------------------------- */
+@media (max-width: 720px) {
+  .case-list__panel {
+    min-width: 0;
+    width: min(92vw, 860px);
+  }
+
+  .case-list__filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .case-list__clear {
+    width: 100%;
+  }
+}

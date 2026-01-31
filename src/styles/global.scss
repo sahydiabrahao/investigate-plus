@@ -1,87 +1,176 @@
-$white: #ffffff;
-$grayLightness: #f3f4f6;
-$grayLight: #e5e7eb;
-$gray: #9ca3af;
-$grayDark: #4b5563;
-$grayDarkness: #111827;
-$black: #000000;
+/* =================================================
+   COLORS (semantic)
+================================================= */
+$color-bg: #272c32;
 
-$backgroundWhite: $white;
-$backgroundLight: $grayLightness;
-$backgroundDark: $grayDarkness;
+$color-surface: #f6f7f9;
+$color-surface-alt: #ffffff;
 
-$textLight: $white;
-$textDark: $grayDarkness;
+$color-text: #e6e8eb;
+$color-text-muted: #a1a6ad;
 
-$buttonLight: $white;
-$buttonDark: #1f2937;
+$color-text-dark: #111827;
+$color-text-dark-muted: #6b7280;
 
-$hoverLight: rgba($white, 0.06);
-$hoverDark: rgba($black, 0.5);
+$color-border: #40464f;
+$color-hover: rgba(64, 70, 79, 0.6);
 
-$hoverTextLight: #eab308;
-$hoverTextDark: #eab308;
+$color-nav-active: rgba(255, 255, 255, 0.06);
+$color-nav-hover: rgba(0, 0, 0, 0.25);
+$color-action-hover: rgba(17, 24, 39, 0.04);
+$color-accent: rgba(255, 255, 255, 0.7);
 
-$colorYellow: #facc15;
-$colorBlue: #3b82f6;
-$colorRed: #ef4444;
-$colorGreen: #22c55e;
-$colorNone: $textDark;
+$color-status-none: #6b7280;
 
-$statusNull: #c9ccd1;
-$statusUrgent: #ff6b6b;
-$statusCompleted: #16c784;
-$statusWaiting: #5ed0fa;
-$statusReview: #8b5cf6;
+$color-status-pending: #ca8a04;
+$color-status-waiting: #2563eb;
 
-$fontSizeSm: 12px;
-$fontSizeMd: 14px;
-$fontSizeLg: 18px;
+$color-status-review: #7c3aed;
+$color-status-completed: #15803d;
+$color-status-urgent: #b91c1c;
 
-$fontWeightRegular: 400;
-$fontWeightBold: 700;
+$color-status-icon-foreground: #ffffff;
 
-$s0: 0;
-$s2: 2px;
-$s4: 4px;
-$s6: 6px;
-$s8: 8px;
-$s10: 10px;
-$s12: 12px;
-$s14: 14px;
-$s16: 16px;
-$s20: 20px;
-$s22: 22px;
-$s24: 24px;
-$s28: 28px;
-$s32: 32px;
-$s40: 40px;
+/* =================================================
+   TYPOGRAPHY
+================================================= */
+$font-family-sans:
+  'Inter',
+  system-ui,
+  -apple-system,
+  Segoe UI,
+  Roboto,
+  Arial,
+  sans-serif;
 
-$shadow: 0 2px 4px rgba($black, 0.06);
+$font-0: 0;
+$font-4: 4px;
+$font-8: 8px;
+$font-12: 12px;
+$font-13: 13px;
+$font-14: 14px;
+$font-16: 16px;
+$font-18: 18px;
+$font-20: 20px;
+$font-24: 24px;
+$font-28: 28px;
+$font-32: 32px;
 
-$transition: 0.12s ease;
+/* Font weights */
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-bold: 700;
 
-.text {
-  font-size: $fontSizeSm;
-  font-weight: $fontWeightRegular;
-}
+/* Line heights */
+$line-height-14: 1.4;
+$line-height-15: 1.5;
+$line-height-16: 1.6;
 
-.text-bold {
-  font-size: $fontSizeSm;
-  font-weight: $fontWeightBold;
+/* =================================================
+   SPACING (explicit, px)
+================================================= */
+$space-0: 0;
+$space-2: 2px;
+$space-4: 4px;
+$space-6: 6px;
+$space-8: 8px;
+$space-10: 10px;
+$space-12: 12px;
+$space-16: 16px;
+$space-20: 20px;
+$space-24: 24px;
+$space-28: 28px;
+$space-32: 32px;
+
+/* =================================================
+   SIZES (controls / icons / hit areas)
+================================================= */
+$size-0: 0;
+$size-16: 16px;
+$size-20: 20px;
+$size-24: 24px;
+$size-32: 32px;
+$size-40: 40px;
+$size-44: 44px;
+$size-48: 48px;
+
+/* =================================================
+   SHAPE & EFFECTS
+================================================= */
+$radius-0: 0;
+$radius-4: 4px;
+$radius-6: 6px;
+$radius-8: 8px;
+$radius-12: 12px;
+
+$focus-ring: 0 0 0 3px rgba(17, 24, 39, 0.25);
+
+/* =================================================
+   BASE / RESET
+================================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html,
 body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  font-family: 'Poppins', sans-serif;
-  background: $backgroundDark;
-  color: $textLight;
+  font-family: $font-family-sans;
+  font-size: $font-14;
+  line-height: $line-height-16;
+  background: $color-bg;
+  color: $color-text;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+ul,
+ol {
+  margin: $space-0;
+  padding: $space-0;
+  list-style: none;
+}
+
+li {
+  margin: $space-0;
+  padding: $space-0;
 }
 
 #root {
   height: 100%;
   width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: $focus-ring;
+  border-radius: $radius-4;
+}
+
+::selection {
+  background: rgba(17, 24, 39, 0.18);
 }

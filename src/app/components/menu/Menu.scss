@@ -3,46 +3,135 @@
 .menu {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  color: $textLight;
-  padding: $s16 $s12;
-  gap: $s16;
+  height: 100%;
+  color: $color-text;
 }
 
-.menu__actions {
-  display: flex;
-  flex-direction: row;
-  gap: $s12;
-  align-items: center;
-}
-
-.menu__label {
+.menu__header {
+  height: $size-48;
   display: flex;
   align-items: center;
-  gap: $s8;
-  font-size: $fontSizeSm;
-  font-weight: $fontWeightBold;
-  opacity: 0.9;
+  padding: $space-0 $space-16;
+  border-bottom: 1px solid $color-border;
+  flex-shrink: 0;
 }
 
-.menu__label-icon {
-  font-size: $fontSizeMd;
+.menu__title {
+  font-size: $font-14;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.08em;
+  color: $color-text;
+}
+
+.menu__content {
+  flex: 1;
+  padding: $space-0 $space-0;
 }
 
 .menu__list {
-  display: flex;
-  flex-direction: column;
-  gap: $s6;
+  margin: $space-0;
+  padding: $space-0;
+  list-style: none;
+}
+
+.menu__row {
+  padding-left: calc(#{$space-8} + (#{$space-16} * var(--level)));
 }
 
 .menu__item {
-  font-size: $fontSizeSm;
-  opacity: 0.9;
-  cursor: pointer;
-  padding: $s6 $s4;
-  border-radius: $s4;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: $space-8;
+  height: $size-32;
+  padding: $space-0 $space-8;
+  color: $color-text-muted;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: default;
 
   &:hover {
-    background: $hoverLight;
+    background: $color-nav-hover;
+  }
+}
+
+.menu__item--active {
+  background: $color-nav-active;
+  color: $color-text;
+  border-left: 3px solid $color-accent;
+}
+
+.menu__icon {
+  width: $size-20;
+  text-align: center;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.menu__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu__caret {
+  width: $size-16;
+  text-align: center;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.menu__item--investigation {
+  color: $color-text;
+  font-weight: $font-weight-medium;
+
+  .menu__icon {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: $color-nav-hover;
+  }
+}
+
+.menu__status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  color: $color-status-none;
+
+  svg {
+    width: $size-20;
+    height: $size-20;
+    display: block;
+  }
+
+  &[data-status='NONE'] {
+    color: $color-status-none;
+  }
+
+  &[data-status='PENDENTE'] {
+    color: $color-status-pending;
+  }
+
+  &[data-status='ANALISAR'] {
+    color: $color-status-review;
+  }
+
+  &[data-status='CONCLUIDO'] {
+    color: $color-status-completed;
+  }
+
+  &[data-status='URGENTE'] {
+    color: $color-status-urgent;
+  }
+
+  &[data-status='AGUARDANDO'] {
+    color: $color-status-waiting;
   }
 }

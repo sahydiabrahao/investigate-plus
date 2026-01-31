@@ -1,380 +1,682 @@
-import { useEffect, useRef, useState } from 'react';
-import { useReadJsonFile, useWriteJsonFile } from '@/hooks';
-import {
-  CaseJson,
-  CaseMetadata,
-  CaseRecord,
-  CaseStatus,
-  createEmptyRecord,
-  normalizeCaseJson,
-} from '@/types/json-default';
-import {
-  DashboardMessage,
-  ButtonStatus,
-  ButtonText,
-  ButtonCopy,
-  RecordCard,
-} from '@/app/components';
 import './Dashboard.scss';
-import { findFileInTree } from '@/utils/find-file-in-tree';
-import { useCaseContext } from '@/context/CaseContext';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import type { DirNode } from '@/utils/read-directory-tree';
+import {
+  INVESTIGATION_FILE,
+  META_ORDER,
+  META_SUGGESTIONS,
+} from '@/constants/investigation.constants';
+import type { CaseStatus } from '@/constants/investigation.constants';
+import { createNewInvestigation } from '@/utils/create-investigation';
+import NotesRichEditor from '@/app/components/notes-rich-editor/NotesRichEditor';
+import StatusButton from '@/app/components/status-button/StatusButton';
+
+type LoadState =
+  | { status: 'idle' }
+  | { status: 'no-root' }
+  | { status: 'no-case-selected' }
+  | { status: 'invalid-case-selected' }
+  | { status: 'loading' }
+  | { status: 'missing-file'; caseDirName: string }
+  | { status: 'ready'; caseDirName: string; json: unknown }
+  | { status: 'error'; message: string };
+
+type SaveStatus = 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
+
+type MetaItem = { key: string; value: string };
+
+function safeJsonParse(text: string): { ok: true; value: unknown } | { ok: false; error: string } {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch {
+    return { ok: false, error: 'JSON inválido (não foi possível fazer parse).' };
+  }
+}
+
+function findDirNodeByPath(tree: DirNode | null, targetPath: string): DirNode | null {
+  if (!tree) return null;
+  if (tree.path === targetPath && tree.type === 'directory') return tree;
+
+  for (const child of tree.children) {
+    if (child.type === 'directory') {
+      const found = findDirNodeByPath(child, targetPath);
+      if (found) return found;
+    }
+  }
+
+  return null;
+}
+
+function isCaseRoot(tree: DirNode | null, dirPath: string): boolean {
+  if (!tree) return false;
+  return tree.children.some((child) => child.type === 'directory' && child.path === dirPath);
+}
+
+async function tryGetInvestigationFile(
+  caseDir: FileSystemDirectoryHandle,
+): Promise<FileSystemFileHandle | null> {
+  try {
+    return await caseDir.getFileHandle(INVESTIGATION_FILE);
+  } catch {
+    return null;
+  }
+}
+
+async function createInvestigationFile(
+  caseDir: FileSystemDirectoryHandle,
+): Promise<FileSystemFileHandle> {
+  const fileHandle = await caseDir.getFileHandle(INVESTIGATION_FILE, { create: true });
+
+  const initial = createNewInvestigation();
+
+  const writable = await fileHandle.createWritable();
+  await writable.write(JSON.stringify(initial, null, 2));
+  await writable.close();
+
+  return fileHandle;
+}
 
 export default function Dashboard() {
-  const { selectedCaseHandle, selectedCaseTree, setStatus } = useCaseContext();
+  const { rootHandle, dirTree, selectedCasePath, refreshTree } = useWorkspace();
 
-  const { data, loading, error } = useReadJsonFile({
-    handle: selectedCaseHandle,
-  });
+  const [state, setState] = useState<LoadState>({ status: 'idle' });
 
-  const { save, saving } = useWriteJsonFile({
-    handle: selectedCaseHandle,
-  });
+  const [notesDraft, setNotesDraft] = useState<unknown | null>(null);
+  const [metaDraft, setMetaDraft] = useState<MetaItem[]>([]);
+  const [statusDraft, setStatusDraft] = useState<CaseStatus | null>(null);
 
-  const [editableCase, setEditableCase] = useState<CaseJson | null>(null);
-  const [originalCase, setOriginalCase] = useState<CaseJson | null>(null);
-  const [statusOpen, setStatusOpen] = useState(false);
-  const statusRef = useRef<HTMLDivElement | null>(null);
-  const notesRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
+  const saveTimerRef = useRef<number | null>(null);
+  const lastSavedSnapshotRef = useRef<string>('');
 
-  const hasChanges =
-    editableCase && originalCase
-      ? JSON.stringify(editableCase) !== JSON.stringify(originalCase)
-      : false;
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  useEffect(() => {
-    if (data) {
-      const normalized = normalizeCaseJson(data);
+  const [isMetaAddOpen, setIsMetaAddOpen] = useState(false);
+  const metaAddRef = useRef<HTMLDivElement | null>(null);
 
-      setEditableCase(normalized);
-      setOriginalCase(normalized);
+  const metaInputRefs = useRef<Array<HTMLInputElement | HTMLTextAreaElement | null>>([]);
+  const focusMetaIndexRef = useRef<number | null>(null);
 
-      if (selectedCaseHandle) {
-        const fileKey = selectedCaseHandle.name;
-        setStatus(fileKey, normalized.case.status);
-      }
-    } else {
-      setEditableCase(null);
-      setOriginalCase(null);
-    }
-  }, [data, selectedCaseHandle, setStatus]);
+  const metaSuggestions = useMemo(() => [...META_SUGGESTIONS], []);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (statusRef.current && !statusRef.current.contains(event.target as Node)) {
-        setStatusOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+  const metaOrderIndex = useMemo(() => {
+    const map = new Map<string, number>();
+    META_ORDER.forEach((k, i) => map.set(k, i));
+    return map;
   }, []);
 
-  useEffect(() => {
-    if (!notesRef.current) return;
-    requestAnimationFrame(() => autoResize(notesRef.current!));
-  }, [editableCase?.case.notes]);
-
-  if (!selectedCaseHandle) {
-    return (
-      <DashboardMessage className='dashboard__empty'>
-        Selecione um arquivo (.json).
-      </DashboardMessage>
-    );
-  }
-
-  if (loading || !editableCase) {
-    return <DashboardMessage>Carregando...</DashboardMessage>;
-  }
-
-  if (error) {
-    return <DashboardMessage className='dashboard__error'>{error}</DashboardMessage>;
-  }
-
-  const handleRecordChange = (id: string, updated: CaseRecord) => {
-    setEditableCase((prev) =>
-      prev
-        ? {
-            ...prev,
-            records: prev.records.map((record) => (record.id === id ? updated : record)),
-          }
-        : prev,
-    );
-  };
-
-  const handleAddRecord = () => {
-    setEditableCase((prev) =>
-      prev
-        ? {
-            ...prev,
-            records: [...prev.records, createEmptyRecord()],
-          }
-        : prev,
-    );
-  };
-
-  const handleDeleteRecord = (id: string) => {
-    setEditableCase((prev) =>
-      prev
-        ? {
-            ...prev,
-            records: prev.records.filter((r) => r.id !== id),
-          }
-        : prev,
-    );
-  };
-
-  const handleMetadataChange = (key: keyof CaseMetadata, value: string) => {
-    setEditableCase((prev) =>
-      prev
-        ? {
-            ...prev,
-            case: {
-              ...prev.case,
-              [key]: value,
-            },
-          }
-        : prev,
-    );
-  };
-
-  function autoResize(el: HTMLTextAreaElement) {
-    el.style.height = '0px';
-    el.style.height = el.scrollHeight + 'px';
-  }
-
-  const handleMoveRecord = (fromIndex: number, toIndex: number) => {
-    setEditableCase((prev) => {
-      if (!prev) return prev;
-
-      const records = [...prev.records];
-      if (toIndex < 0 || toIndex >= records.length) return prev;
-
-      const [moved] = records.splice(fromIndex, 1);
-      records.splice(toIndex, 0, moved);
-
-      return { ...prev, records };
+  function sortMeta(items: MetaItem[]) {
+    const indexed = items.map((it, originalIndex) => ({ it, originalIndex }));
+    indexed.sort((a, b) => {
+      const ai = metaOrderIndex.get(a.it.key) ?? Number.POSITIVE_INFINITY;
+      const bi = metaOrderIndex.get(b.it.key) ?? Number.POSITIVE_INFINITY;
+      if (ai !== bi) return ai - bi;
+      return a.originalIndex - b.originalIndex;
     });
-  };
+    return indexed.map((x) => x.it);
+  }
 
-  async function handleOpenReference(fileName: string) {
-    if (!selectedCaseTree) {
-      alert('Pasta do caso não encontrada.');
+  const measureCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  function getMeasureCanvas(): HTMLCanvasElement {
+    if (!measureCanvasRef.current) {
+      measureCanvasRef.current = document.createElement('canvas');
+    }
+    return measureCanvasRef.current;
+  }
+
+  function autosizeInput(el: HTMLInputElement, value: string) {
+    const style = window.getComputedStyle(el);
+    const font = style.font || `${style.fontSize} ${style.fontFamily}`;
+
+    const canvas = getMeasureCanvas();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.font = font;
+
+    const text = value && value.length > 0 ? value : '—';
+    const measured = ctx.measureText(text).width;
+
+    const paddingLeft = Number.parseFloat(style.paddingLeft || '0') || 0;
+    const paddingRight = Number.parseFloat(style.paddingRight || '0') || 0;
+    const borders =
+      (Number.parseFloat(style.borderLeftWidth || '0') || 0) +
+      (Number.parseFloat(style.borderRightWidth || '0') || 0);
+
+    const extra = 14;
+    const next = measured + paddingLeft + paddingRight + borders + extra;
+
+    const max = 520;
+
+    const clamped = Math.min(max, next);
+    el.style.width = `${Math.round(clamped)}px`;
+  }
+
+  function autosizeTextarea(el: HTMLTextAreaElement) {
+    el.style.height = '0px';
+    const next = el.scrollHeight;
+    el.style.height = `${next}px`;
+  }
+
+  async function saveDraftToFile(next: {
+    notesState: unknown | null;
+    meta: MetaItem[];
+    status: CaseStatus | null;
+  }) {
+    const fh = fileHandleRef.current;
+    if (!fh) return;
+
+    const file = await fh.getFile();
+    const text = await file.text();
+
+    const parsed = safeJsonParse(text);
+    if (!parsed.ok) throw new Error(parsed.error);
+
+    interface Investigation {
+      meta?: MetaItem[];
+      notesRich?: { state?: unknown };
+      status?: CaseStatus;
+      updatedAt?: string;
+    }
+
+    const json = parsed.value as Investigation;
+
+    json.meta = next.meta;
+
+    json.notesRich = json.notesRich ?? {};
+    json.notesRich.state = next.notesState ?? null;
+
+    if (next.status) {
+      json.status = next.status;
+    } else {
+      if ('status' in json) delete json.status;
+    }
+
+    json.updatedAt = new Date().toISOString();
+
+    const nextText = JSON.stringify(json, null, 2);
+
+    if (nextText === lastSavedSnapshotRef.current) return;
+
+    const writable = await fh.createWritable();
+    await writable.write(nextText);
+    await writable.close();
+
+    lastSavedSnapshotRef.current = nextText;
+  }
+
+  async function handleChangeStatus(next: CaseStatus | null) {
+    setStatusDraft(next);
+
+    if (state.status !== 'ready') {
+      setSaveStatus('dirty');
       return;
     }
 
-    const handle = findFileInTree(selectedCaseTree, fileName);
-    if (!handle) {
-      alert(`Arquivo não encontrado neste caso: ${fileName}`);
+    if (!fileHandleRef.current) {
+      setSaveStatus('dirty');
+      return;
+    }
+
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+
+    try {
+      setSaveStatus('saving');
+      await saveDraftToFile({ notesState: notesDraft, meta: metaDraft, status: next });
+      setSaveStatus('saved');
+      await refreshTree();
+    } catch {
+      setSaveStatus('error');
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fileHandleRef.current = null;
+    lastSavedSnapshotRef.current = '';
+    setSaveStatus('idle');
+
+    setNotesDraft(null);
+    setMetaDraft([]);
+    setStatusDraft(null);
+
+    (async () => {
+      if (!rootHandle) {
+        setState({ status: 'no-root' });
+        return;
+      }
+
+      if (!selectedCasePath) {
+        setState({ status: 'no-case-selected' });
+        return;
+      }
+
+      if (!isCaseRoot(dirTree, selectedCasePath)) {
+        setState({ status: 'invalid-case-selected' });
+        return;
+      }
+
+      const caseNode = findDirNodeByPath(dirTree, selectedCasePath);
+
+      if (!caseNode) {
+        setState({ status: 'error', message: 'Pasta do caso não encontrada na árvore.' });
+        return;
+      }
+
+      setState({ status: 'loading' });
+
+      const fileHandle = await tryGetInvestigationFile(caseNode.handle);
+
+      if (cancelled) return;
+
+      if (!fileHandle) {
+        setState({ status: 'missing-file', caseDirName: caseNode.name });
+        return;
+      }
+
+      fileHandleRef.current = fileHandle;
+
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+
+      if (cancelled) return;
+
+      const parsed = safeJsonParse(text);
+      if (!parsed.ok) {
+        setState({ status: 'error', message: parsed.error });
+        return;
+      }
+
+      interface Investigation {
+        meta?: MetaItem[];
+        notesRich?: { state?: unknown };
+        status?: CaseStatus;
+      }
+
+      const loaded = parsed.value as Investigation;
+
+      const rawMeta = Array.isArray(loaded?.meta) ? loaded.meta : [];
+      setMetaDraft(sortMeta(rawMeta));
+
+      setNotesDraft(loaded?.notesRich?.state ?? null);
+      setStatusDraft(loaded?.status ?? null);
+
+      setSaveStatus('idle');
+
+      lastSavedSnapshotRef.current = JSON.stringify(parsed.value, null, 2);
+
+      setState({
+        status: 'ready',
+        caseDirName: caseNode.name,
+        json: parsed.value,
+      });
+    })().catch((e) => {
+      setState({ status: 'error', message: e instanceof Error ? e.message : 'Erro inesperado.' });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [rootHandle, dirTree, selectedCasePath, metaOrderIndex]);
+
+  useEffect(() => {
+    if (state.status !== 'ready') return;
+    if (saveStatus !== 'dirty') return;
+    if (!fileHandleRef.current) return;
+
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+
+    saveTimerRef.current = window.setTimeout(() => {
+      (async () => {
+        try {
+          setSaveStatus('saving');
+          await saveDraftToFile({ notesState: notesDraft, meta: metaDraft, status: statusDraft });
+          setSaveStatus('saved');
+        } catch {
+          setSaveStatus('error');
+        }
+      })();
+    }, 900);
+
+    return () => {
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    };
+  }, [notesDraft, metaDraft, statusDraft, saveStatus, state.status]);
+
+  useEffect(() => {
+    const idx = focusMetaIndexRef.current;
+    if (idx == null) return;
+
+    const el = metaInputRefs.current[idx];
+    if (!el) return;
+
+    focusMetaIndexRef.current = null;
+
+    window.setTimeout(() => {
+      el.focus();
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
+    }, 0);
+  }, [metaDraft]);
+
+  useEffect(() => {
+    metaDraft.forEach((item, idx) => {
+      const el = metaInputRefs.current[idx];
+
+      if (el instanceof HTMLInputElement) {
+        autosizeInput(el, item.value);
+      }
+
+      if (el instanceof HTMLTextAreaElement) {
+        autosizeTextarea(el);
+      }
+    });
+  }, [metaDraft]);
+
+  useEffect(() => {
+    function onDocMouseDown(e: MouseEvent) {
+      if (!isMetaAddOpen) return;
+      const t = e.target;
+      if (!(t instanceof Node)) return;
+
+      const inside = metaAddRef.current?.contains(t) ?? false;
+      if (!inside) setIsMetaAddOpen(false);
+    }
+
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
+  }, [isMetaAddOpen]);
+
+  async function handleCreateInvestigation() {
+    if (!selectedCasePath) return;
+
+    if (!isCaseRoot(dirTree, selectedCasePath)) {
+      setState({ status: 'invalid-case-selected' });
+      return;
+    }
+
+    const caseNode = findDirNodeByPath(dirTree, selectedCasePath);
+    if (!caseNode) {
+      setState({ status: 'error', message: 'Pasta do caso não encontrada na árvore.' });
       return;
     }
 
     try {
-      const file = await handle.getFile();
-      const url = URL.createObjectURL(file);
+      setState({ status: 'loading' });
 
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } catch (err) {
-      alert('Erro ao abrir arquivo.');
-      console.error(err);
+      const fileHandle = await createInvestigationFile(caseNode.handle);
+      fileHandleRef.current = fileHandle;
+
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+
+      const parsed = safeJsonParse(text);
+      if (!parsed.ok) {
+        setState({ status: 'error', message: parsed.error });
+        return;
+      }
+
+      interface Investigation {
+        meta?: MetaItem[];
+        notesRich?: { state?: unknown };
+        status?: CaseStatus;
+      }
+
+      const created = parsed.value as Investigation;
+
+      const rawMeta = Array.isArray(created?.meta) ? created.meta : [];
+      setMetaDraft(sortMeta(rawMeta));
+
+      setNotesDraft(created?.notesRich?.state ?? null);
+      setStatusDraft(created?.status ?? null);
+
+      setSaveStatus('idle');
+
+      lastSavedSnapshotRef.current = JSON.stringify(parsed.value, null, 2);
+
+      setState({
+        status: 'ready',
+        caseDirName: caseNode.name,
+        json: parsed.value,
+      });
+    } catch (e) {
+      setState({ status: 'error', message: e instanceof Error ? e.message : 'Erro inesperado.' });
     }
   }
 
-  const handleStatusChange = async (newStatus: CaseStatus) => {
-    setStatusOpen(false);
-    if (!editableCase) return;
+  function addMetaItem(key: string) {
+    setMetaDraft((prev) => {
+      const newItem: MetaItem = { key, value: '' };
+      const next = sortMeta([...prev, newItem]);
 
-    const updatedCase: CaseJson = {
-      ...editableCase,
-      case: {
-        ...editableCase.case,
-        status: newStatus,
-      },
-    };
+      const newIndex = next.indexOf(newItem);
+      focusMetaIndexRef.current = newIndex >= 0 ? newIndex : next.length - 1;
 
-    setEditableCase(updatedCase);
-    setOriginalCase(updatedCase);
+      return next;
+    });
 
-    if (selectedCaseHandle) {
-      const fileKey = selectedCaseHandle.name;
-      setStatus(fileKey, newStatus);
+    setSaveStatus('dirty');
+    setIsMetaAddOpen(false);
+  }
+
+  function removeMetaItem(index: number) {
+    setMetaDraft((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      return sortMeta(next);
+    });
+    setSaveStatus('dirty');
+  }
+
+  function updateMetaValue(index: number, value: string) {
+    setMetaDraft((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], value };
+      return next;
+    });
+    setSaveStatus('dirty');
+  }
+
+  if (state.status === 'no-root') {
+    return (
+      <div className='dashboard dashboard--empty'>
+        <h1 className='dashboard__title'>Nenhuma pasta importada</h1>
+        <p className='dashboard__hint'>Use o botão Import para escolher a pasta “investigando”.</p>
+      </div>
+    );
+  }
+
+  if (state.status === 'no-case-selected') {
+    return (
+      <div className='dashboard dashboard--empty'>
+        <h1 className='dashboard__title'>Nenhum caso selecionado</h1>
+        <p className='dashboard__hint'>
+          Selecione um caso na barra lateral para abrir a investigação.
+        </p>
+      </div>
+    );
+  }
+
+  if (state.status === 'invalid-case-selected') {
+    return (
+      <div className='dashboard dashboard--empty'>
+        <h1 className='dashboard__title'>Seleção inválida</h1>
+        <p className='dashboard__hint'>
+          Selecione a pasta principal do caso (filha direta da pasta importada).
+        </p>
+      </div>
+    );
+  }
+
+  if (state.status === 'loading') {
+    return (
+      <div className='dashboard'>
+        <h1 className='dashboard__title'>Investigação</h1>
+        <p className='dashboard__hint'>Carregando…</p>
+      </div>
+    );
+  }
+
+  if (state.status === 'missing-file') {
+    return (
+      <div className='dashboard'>
+        <h1 className='dashboard__title'>Investigação</h1>
+        <div className='dashboard__meta'>
+          <div className='dashboard__row'>
+            <span className='dashboard__label'>CASO</span>
+            <span className='dashboard__value'>{state.caseDirName}</span>
+          </div>
+        </div>
+
+        <p className='dashboard__hint'>
+          Arquivo não encontrado. Você pode criar uma investigação nova para este caso.
+        </p>
+
+        <button type='button' className='dashboard__primary' onClick={handleCreateInvestigation}>
+          Criar nova investigação
+        </button>
+      </div>
+    );
+  }
+
+  if (state.status === 'error') {
+    return (
+      <div className='dashboard'>
+        <h1 className='dashboard__title'>Erro</h1>
+        <p className='dashboard__hint'>{state.message}</p>
+      </div>
+    );
+  }
+
+  if (state.status === 'ready') {
+    interface Investigation {
+      notesRich?: { state?: unknown };
     }
 
-    await save(updatedCase);
-  };
+    const investigation = state.json as Investigation;
+    const initialNotesState = investigation?.notesRich?.state;
 
-  return (
-    <div className='dashboard'>
-      <header className='dashboard__header'>
-        <div className='dashboard__header-row'>
-          <div className='dashboard__header-title-group'>
-            <div className='dashboard__status-wrapper' ref={statusRef}>
-              <ButtonStatus
-                status={editableCase.case.status}
-                size='lg'
-                onClick={() => setStatusOpen((open) => !open)}
-              />
-
-              {statusOpen && (
-                <div className='dashboard__status-dropdown'>
-                  <button
-                    className='dashboard__status-item'
-                    onClick={() => handleStatusChange('null')}
-                  >
-                    <ButtonStatus status='null' size='md' />
-                    Sem status
-                  </button>
-
-                  <button
-                    className='dashboard__status-item'
-                    onClick={() => handleStatusChange('incomplete')}
-                  >
-                    <ButtonStatus status='incomplete' size='md' />
-                    Pendente
-                  </button>
-
-                  <button
-                    className='dashboard__status-item'
-                    onClick={() => handleStatusChange('waiting')}
-                  >
-                    <ButtonStatus status='waiting' size='md' />
-                    Aguardando
-                  </button>
-
-                  <button
-                    className='dashboard__status-item'
-                    onClick={() => handleStatusChange('urgent')}
-                  >
-                    <ButtonStatus status='urgent' size='md' />
-                    Urgente
-                  </button>
-                  <button
-                    className='dashboard__status-item'
-                    onClick={() => handleStatusChange('review')}
-                  >
-                    <ButtonStatus status='review' size='md' />
-                    Analisar
-                  </button>
-                  <button
-                    className='dashboard__status-item'
-                    onClick={() => handleStatusChange('completed')}
-                  >
-                    <ButtonStatus status='completed' size='md' />
-                    Concluído
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <h1 className='dashboard__title'>{editableCase.case.id}</h1>
+    return (
+      <div className='dashboard'>
+        <div className='dashboard__header'>
+          <div className='dashboard__title-wrap'>
+            <h1 className='dashboard__title'>{state.caseDirName}</h1>
+            <StatusButton value={statusDraft} onChange={handleChangeStatus} />
           </div>
 
-          <div className='dashboard__header-actions'>
-            <ButtonText text='Adicionar' variant='filled' size='sm' onClick={handleAddRecord} />
-            <ButtonText
-              text={saving ? 'Salvando...' : 'Salvar'}
-              size='sm'
-              variant='outline'
-              disabled={saving || !editableCase || !hasChanges}
-              onClick={() => {
-                if (!editableCase) return;
-                save(editableCase);
-                setOriginalCase(editableCase);
-              }}
-            />
+          <div className='dashboard__header-actions' ref={metaAddRef}>
+            <button
+              type='button'
+              className='dashboard__btn'
+              onClick={() => setIsMetaAddOpen((v) => !v)}
+              aria-haspopup='menu'
+              aria-expanded={isMetaAddOpen}
+              title='Adicionar metadado'
+            >
+              Adicionar
+            </button>
+
+            {isMetaAddOpen && (
+              <div className='dashboard__meta-popover' role='menu' aria-label='Adicionar metadado'>
+                {metaSuggestions.map((k) => (
+                  <button
+                    key={k}
+                    type='button'
+                    className='dashboard__meta-popover-item'
+                    onClick={() => addMetaItem(k)}
+                  >
+                    {k}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className='dashboard__status'>
+              {saveStatus === 'saving' && 'Salvando…'}
+              {saveStatus === 'saved' && 'Salvo'}
+              {saveStatus === 'error' && 'Não foi possível salvar'}
+              {saveStatus === 'dirty' && 'Não salvo'}
+            </div>
           </div>
         </div>
 
         <div className='dashboard__meta'>
-          <label className='meta-field'>
-            <h2 className='meta-field__label'>Data:</h2>
-            <textarea
-              className='meta-field__text-area meta-field__text-area--single'
-              value={editableCase.case.date}
-              onChange={(e) => {
-                handleMetadataChange('date', e.target.value);
-              }}
-              rows={1}
-              style={{
-                width: `${Math.max((editableCase.case.date.length || 1) + 1, 8)}ch`,
-              }}
-            />
+          {metaDraft.length > 0 && (
+            <div className='dashboard__meta-list'>
+              {metaDraft.map((item, idx) => {
+                const isResumo = item.key === 'RESUMO';
 
-            <label className='meta-field'>
-              <h2 className='meta-field__label'>Crime:</h2>
-              <textarea
-                className='meta-field__text-area meta-field__text-area--single'
-                value={editableCase.case.crime}
-                onChange={(e) => {
-                  handleMetadataChange('crime', e.target.value);
-                }}
-                rows={1}
-                style={{
-                  width: `${Math.max((editableCase.case.crime.length || 1) + 1, 8)}ch`,
-                }}
-              />
-            </label>
+                return (
+                  <div
+                    key={`${item.key}-${idx}`}
+                    className={`dashboard__row ${isResumo ? 'dashboard__row--full' : ''}`}
+                  >
+                    <span className='dashboard__label'>{item.key}</span>
 
-            <label className='meta-field'>
-              <h2 className='meta-field__label'>Vítima:</h2>
-              <textarea
-                className='meta-field__text-area meta-field__text-area--single'
-                value={editableCase.case.victim}
-                onChange={(e) => {
-                  handleMetadataChange('victim', e.target.value);
-                }}
-                rows={1}
-                style={{
-                  width: `${Math.max((editableCase.case.victim.length || 1) + 1, 8)}ch`,
-                }}
-              />
-            </label>
-          </label>
+                    {isResumo ? (
+                      <textarea
+                        ref={(el) => {
+                          metaInputRefs.current[idx] = el;
+                          if (el) autosizeTextarea(el);
+                        }}
+                        className='dashboard__field dashboard__field--textarea'
+                        rows={1}
+                        value={item.value}
+                        onChange={(e) => {
+                          autosizeTextarea(e.currentTarget);
+                          updateMetaValue(idx, e.currentTarget.value);
+                        }}
+                        placeholder='Escreva um resumo curto…'
+                      />
+                    ) : (
+                      <input
+                        ref={(el) => {
+                          metaInputRefs.current[idx] = el;
+                          if (el) autosizeInput(el, item.value);
+                        }}
+                        className='dashboard__field'
+                        value={item.value}
+                        onChange={(e) => {
+                          autosizeInput(e.currentTarget, e.currentTarget.value);
+                          updateMetaValue(idx, e.currentTarget.value);
+                        }}
+                        placeholder='—'
+                      />
+                    )}
+
+                    <div className='dashboard__actions'>
+                      <button
+                        type='button'
+                        className='dashboard__icon-btn'
+                        onClick={() => removeMetaItem(idx)}
+                        title='Remover'
+                        aria-label='Remover'
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        <label className='meta-field'>
-          <h2 className='meta-field__label'>Anotações:</h2>
-          <textarea
-            ref={notesRef}
-            className='meta-field__text-area'
-            value={editableCase.case.notes}
-            onChange={(e) => {
-              handleMetadataChange('notes', e.target.value);
-              autoResize(e.currentTarget);
+        <div className='dashboard__section'>
+          <NotesRichEditor
+            initialState={notesDraft ?? initialNotesState}
+            onChange={(nextState) => {
+              setNotesDraft(nextState);
+              setSaveStatus('dirty');
             }}
-            onInput={(e) => autoResize(e.currentTarget)}
           />
-        </label>
-      </header>
-
-      <section className='dashboard__section'>
-        <div className='dashboard__section-header'>
-          <h2 className='dashboard__section-title'>Investigação</h2>
-          <div className='dashboard__section-actions'>
-            <ButtonCopy />
-          </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className='dashboard__records'>
-          {editableCase.records.map((record, index) => (
-            <RecordCard
-              key={record.id}
-              record={record}
-              onChange={(updated) => handleRecordChange(record.id, updated)}
-              onDelete={() => handleDeleteRecord(record.id)}
-              onMoveUp={index === 0 ? undefined : () => handleMoveRecord(index, index - 1)}
-              onMoveDown={
-                index === editableCase.records.length - 1
-                  ? undefined
-                  : () => handleMoveRecord(index, index + 1)
-              }
-              isFirst={index === 0}
-              isLast={index === editableCase.records.length - 1}
-              onOpenReference={handleOpenReference}
-            />
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+  return <div className='dashboard' />;
 }

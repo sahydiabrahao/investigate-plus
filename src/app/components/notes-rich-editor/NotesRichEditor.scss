@@ -1,0 +1,222 @@
+@use '@/styles/global' as *;
+
+.notes-editor {
+  position: relative;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+
+  border-top: 2px solid rgba(17, 24, 39, 0.12);
+}
+
+.notes-editor:focus-within {
+  border-top-color: rgba(17, 24, 39, 0.35);
+}
+
+.notes-editor__toolbar {
+  display: flex;
+  align-items: center;
+  gap: $space-6;
+  padding: $space-8 0;
+  background: transparent;
+  border: 0;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: $size-32;
+    padding: 0 $space-8;
+    border-radius: $radius-8;
+
+    cursor: pointer;
+    color: $color-text-dark-muted;
+    background: transparent;
+
+    &:hover {
+      color: $color-text-dark;
+      background: $color-nav-active;
+    }
+
+    &:active {
+      transform: translateY(0.5px);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: $focus-ring;
+    }
+  }
+}
+
+.notes-editor__divider {
+  width: 1px;
+  height: $size-20;
+  background: rgba(17, 24, 39, 0.12);
+  margin: 0 $space-8;
+}
+
+.notes-editor__content {
+  min-height: 240px;
+  padding: $space-12 0;
+  outline: none;
+
+  color: $color-text-dark;
+  background: transparent;
+  line-height: $line-height-16;
+
+  border: 0;
+  border-radius: 0;
+
+  &:focus-visible {
+    box-shadow: none;
+  }
+}
+
+.notes-editor__placeholder {
+  position: absolute;
+  left: 0;
+  top: calc(#{$size-32} + #{$space-8});
+  padding: $space-12 0;
+
+  color: $color-text-dark-muted;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.notes-editor__popover-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.notes-editor__popover {
+  position: absolute;
+  top: calc(100% + #{$space-8});
+  left: 0;
+
+  display: flex;
+  gap: $space-8;
+  padding: $space-8;
+
+  border-radius: $radius-8;
+
+  background: $color-bg;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.1);
+
+  z-index: 50;
+}
+
+.notes-editor__swatch {
+  height: $size-32;
+  width: $size-32;
+  padding: 0;
+  border-radius: $radius-8;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.notes-editor__dot {
+  width: $size-16;
+  height: $size-16;
+  border-radius: 999px;
+
+  &[data-empty='true'] {
+    border: 1px solid rgba(17, 24, 39, 0.25);
+    background: transparent;
+  }
+
+  &[data-empty='false'] {
+    border: 1px solid rgba(17, 24, 39, 0.1);
+  }
+}
+
+.notes-editor__symbol {
+  height: $size-32;
+  min-width: $size-32;
+  padding: 0 $space-8;
+  border-radius: $radius-8;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  background: transparent;
+  color: rgba(39, 17, 17, 0.85);
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.06);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.notes-editor__bold {
+  font-weight: $font-weight-bold;
+}
+
+.notes-editor__italic {
+  font-style: italic;
+}
+
+.notes-editor__underline {
+  text-decoration: underline;
+}
+
+.notes-editor__paragraph {
+  margin: 0 0 $space-8 0;
+}
+
+.notes-editor__popover--attachments {
+  display: flex;
+  flex-direction: column;
+
+  max-height: 260px;
+  min-width: 220px;
+
+  overflow-y: auto;
+  padding: 4px;
+
+  gap: 2px;
+}
+
+.notes-editor__popover--attachments button {
+  display: flex;
+  align-items: center;
+
+  padding: 4px 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: $color-text;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  border-radius: 4px;
+}
+
+.notes-editor__popover--attachments button:hover {
+  background: $color-nav-active;
+}
