@@ -83,6 +83,10 @@ export class FileLinkNode extends DecoratorNode<ReactNode> {
   }
 
   isIsolated(): boolean {
+    return false;
+  }
+
+  isKeyboardSelectable(): boolean {
     return true;
   }
 
