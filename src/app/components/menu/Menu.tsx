@@ -41,7 +41,7 @@ export function Menu() {
   return (
     <nav className='menu'>
       <div className='menu__header'>
-        <span className='menu__title'>INVESTIGATE</span>
+        <span className='menu__title'>INVESTIGATE+</span>
       </div>
 
       <div className='menu__content'>
