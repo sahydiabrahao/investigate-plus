@@ -172,10 +172,11 @@ function Toolbar() {
 
   const COLORS: Array<{ name: string; value: string | null }> = [
     { name: 'Padrão', value: null },
-    { name: 'Preto', value: '#111827' },
-    { name: 'Cinza', value: '#374151' },
-    { name: 'Azul', value: '#1d4ed8' },
-    { name: 'Vermelho', value: '#b91c1c' },
+    { name: 'Amarelo', value: '#ca8a04' },
+    { name: 'Verde', value: '#15803d' },
+    { name: 'Azul', value: '#1e40af' },
+    { name: 'Rosa', value: '#be185d' },
+    { name: 'Vermelho', value: '#991b1b' },
   ];
 
   const SYMBOLS: Array<{ name: string; value: string }> = [
