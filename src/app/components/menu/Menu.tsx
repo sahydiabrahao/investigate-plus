@@ -47,7 +47,7 @@ export function Menu() {
       <div className='menu__content'>
         {!dirTree ? (
           <div className='menu__empty'>
-            <span className='menu__empty-title'>Nenhuma pasta importada</span>
+            <span className='menu__empty-title'>Nenhuma pasta importada. </span>
             <span className='menu__empty-subtitle'>
               Use o botão <strong>Import</strong> para escolher uma pasta.
             </span>
