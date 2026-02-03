@@ -206,10 +206,11 @@
 
 .notes-editor__popover--attachments {
   display: flex;
+  align-items: stretch;
   flex-direction: column;
 
   max-height: 260px;
-  min-width: 220px;
+  max-width: 360px;
 
   overflow-y: auto;
   padding: 4px;
@@ -219,11 +220,12 @@
 
 .notes-editor__popover--attachments button {
   display: flex;
-  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
 
-  padding: 4px 6px;
+  padding: 6px 8px;
+  line-height: 1.3;
   font-size: 12px;
-  line-height: 1.2;
   color: $color-text;
   text-align: left;
   white-space: nowrap;
@@ -232,7 +234,21 @@
 
   border-radius: 4px;
 }
+.notes-editor__popover--attachments button::before {
+  content: '📄';
+  margin-right: 6px;
+  opacity: 0.75;
+}
 
 .notes-editor__popover--attachments button:hover {
   background: $color-nav-active;
+  color: $color-text;
+}
+.notes-editor__loading {
+  padding: 8px;
+  text-align: center;
+
+  color: $color-text-dark-muted;
+  font-size: 18px;
+  letter-spacing: 2px;
 }
