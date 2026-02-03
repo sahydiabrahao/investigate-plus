@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import { Menu } from '@/app/components/menu/Menu';
 import { BottomMenu } from '@/app/components/bottom-menu/BottomMenu';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import CaseListView from '@/app/components/case-list-view/CaseListView';
 import './AppLayout.scss';
 import { ChevronLeftIcon } from '../icons';
-import Dashboard from '../pages/dashboard/Dashboard';
 
 const SIDEBAR_MIN = 300;
 const SIDEBAR_MAX = 520;
@@ -66,7 +66,7 @@ export function AppLayout() {
       </aside>
 
       <main className='app-layout__content'>
-        <Dashboard />
+        <Outlet />
       </main>
 
       {!isCasesOpen && (

@@ -13,8 +13,8 @@ export function BottomMenu({ onImport, onRefresh, canRefresh = true }: Props) {
         className='bottom-menu__item'
         type='button'
         onClick={onImport}
-        aria-label='Import folder'
-        title='Import folder'
+        aria-label='Import workspace folder'
+        title='Import workspace folder'
       >
         ⬆
       </button>
@@ -23,8 +23,8 @@ export function BottomMenu({ onImport, onRefresh, canRefresh = true }: Props) {
         className='bottom-menu__item'
         type='button'
         onClick={onRefresh}
-        aria-label='Refresh'
-        title='Refresh'
+        aria-label='Reload workspace'
+        title='Reload workspace'
         disabled={!canRefresh}
       >
         ⟳

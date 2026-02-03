@@ -9,9 +9,9 @@ export function AppRouter() {
       <HashRouter>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route index element={<Navigate to='/dashboard' replace />} />
+            <Route index element={<Dashboard />} />
             <Route path='/dashboard' element={<Dashboard />} />
-            <Route path='*' element={<Navigate to='/dashboard' replace />} />
+            <Route path='*' element={<Navigate to='/' replace />} />
           </Route>
         </Routes>
       </HashRouter>

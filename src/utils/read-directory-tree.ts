@@ -14,6 +14,7 @@ export type DirNode = {
   handle: FileSystemDirectoryHandle;
   children: Array<DirNode | FileNode>;
   status: CaseStatus | null;
+  loaded?: boolean;
 };
 
 async function readCaseStatus(caseDir: FileSystemDirectoryHandle): Promise<CaseStatus | null> {
@@ -33,6 +34,7 @@ export async function scanDirectoryTree(
   handle: FileSystemDirectoryHandle,
   basePath = '',
   depth = 0,
+  maxDepth = Number.POSITIVE_INFINITY,
 ): Promise<DirNode> {
   const name = handle.name;
   const path = basePath ? `${basePath}/${name}` : name;
@@ -46,7 +48,24 @@ export async function scanDirectoryTree(
 
   for await (const entry of handle.values()) {
     if (entry.kind === 'directory') {
-      const dir = await scanDirectoryTree(entry, path, depth + 1);
+      if (depth + 1 > maxDepth) {
+        const childName = entry.name;
+        const childPath = `${path}/${childName}`;
+
+        children.push({
+          type: 'directory',
+          name: childName,
+          path: childPath,
+          handle: entry,
+          children: [],
+          status: null,
+          loaded: false,
+        });
+
+        continue;
+      }
+
+      const dir = await scanDirectoryTree(entry, path, depth + 1, maxDepth);
       children.push(dir);
     }
 
@@ -67,5 +86,6 @@ export async function scanDirectoryTree(
     handle,
     children,
     status,
+    loaded: true,
   };
 }

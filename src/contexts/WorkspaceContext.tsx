@@ -19,6 +19,7 @@ import {
   scanDirectoryTree,
 } from '@/utils/read-directory-tree';
 import { INVESTIGATION_FILE, type CaseStatus } from '@/constants/investigation.constants';
+import { getDirectoryHandleByRelativePath } from '@/utils/get-directory-handle';
 
 type MetaItem = { key: string; value: string };
 
@@ -58,10 +59,13 @@ type WorkspaceContextValue = {
 
   importFolder: () => Promise<void>;
   refreshTree: () => Promise<void>;
+  refreshCase: (casePath?: string | null) => Promise<void>;
+  expandDir: (dirPath: string) => Promise<void>;
 };
 
 type DirNodeWithStatus = Omit<BaseDirNode, 'children'> & {
   status?: CaseStatus | null;
+  loaded?: boolean;
   children: Array<DirNodeWithStatus | FileNode>;
 };
 
@@ -223,6 +227,30 @@ function buildDerivedSummaryFields(caseName: string, meta: MetaItem[]) {
   };
 }
 
+function makeCaseSummary(
+  name: string,
+  path: string,
+  info: { status: CaseStatus | null; meta: MetaItem[]; updatedAt: string | null },
+) {
+  const derived = buildDerivedSummaryFields(name, info.meta);
+
+  return {
+    name,
+    path,
+    status: info.status,
+    meta: info.meta,
+    updatedAt: info.updatedAt,
+
+    oc: derived.oc,
+    hasIp: derived.hasIp,
+    hasMc: derived.hasMc,
+    ipNumber: derived.ipNumber,
+    mcNumber: derived.mcNumber,
+    crime: derived.crime,
+    crimeNormalized: derived.crimeNormalized,
+  } satisfies CaseSummary;
+}
+
 async function buildCasesIndex(tree: DirNodeWithStatus): Promise<CaseSummary[]> {
   const caseDirs = tree.children.filter((c): c is DirNodeWithStatus => c.type === 'directory');
 
@@ -250,29 +278,63 @@ async function buildCasesIndex(tree: DirNodeWithStatus): Promise<CaseSummary[]> 
 
       dir.status = info.status;
 
-      const derived = buildDerivedSummaryFields(dir.name, info.meta);
-
-      return {
-        name: dir.name,
-        path: dir.path,
-        status: info.status,
-        meta: info.meta,
-        updatedAt: info.updatedAt,
-
-        oc: derived.oc,
-        hasIp: derived.hasIp,
-        hasMc: derived.hasMc,
-        ipNumber: derived.ipNumber,
-        mcNumber: derived.mcNumber,
-        crime: derived.crime,
-        crimeNormalized: derived.crimeNormalized,
-      } satisfies CaseSummary;
+      return makeCaseSummary(dir.name, dir.path, info);
     }),
   );
 
   summaries.sort((a, b) => safeTime(b.updatedAt) - safeTime(a.updatedAt));
 
   return summaries;
+}
+
+function parentPathOf(path: string): string {
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length <= 1) return '';
+  return parts.slice(0, -1).join('/');
+}
+
+function normalizeCaseRelativePath(root: FileSystemDirectoryHandle, casePath: string): string {
+  const rootName = root.name;
+  if (casePath === rootName) return '';
+  if (casePath.startsWith(`${rootName}/`)) return casePath.slice(rootName.length + 1);
+  return casePath;
+}
+
+function replaceDirNodeByPath(
+  node: BaseDirNode,
+  targetPath: string,
+  replacement: BaseDirNode,
+): BaseDirNode {
+  if (node.path === targetPath) return replacement;
+
+  const nextChildren = node.children.map((child) => {
+    if (child.type === 'directory') {
+      if (child.path === targetPath) return replacement;
+      return replaceDirNodeByPath(child, targetPath, replacement);
+    }
+    return child;
+  });
+
+  return { ...node, children: nextChildren };
+}
+
+function findDirNodeByPath(tree: BaseDirNode | null, targetPath: string): BaseDirNode | null {
+  if (!tree) return null;
+  if (tree.type === 'directory' && tree.path === targetPath) return tree;
+
+  for (const child of tree.children) {
+    if (child.type === 'directory') {
+      const found = findDirNodeByPath(child, targetPath);
+      if (found) return found;
+    }
+  }
+
+  return null;
+}
+
+function depthFromPath(path: string): number {
+  const parts = path.split('/').filter(Boolean);
+  return Math.max(parts.length - 1, 0);
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
@@ -293,7 +355,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       const ok = await requestPermission(handle);
       if (!ok) return;
 
-      const tree = (await scanDirectoryTree(handle)) as DirNodeWithStatus;
+      const tree = (await scanDirectoryTree(handle, '', 0, 1)) as DirNodeWithStatus;
 
       const nextCases = await buildCasesIndex(tree);
 
@@ -349,6 +411,77 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     await buildTree(rootHandle, desired);
   }, [rootHandle, buildTree, selectedCasePath]);
 
+  const refreshCase = useCallback(
+    async (casePath?: string | null) => {
+      if (!rootHandle) return;
+
+      const targetPath = casePath ?? selectedCasePath ?? (await loadLastCasePath());
+      if (!targetPath) return;
+
+      const ok = await requestPermission(rootHandle);
+      if (!ok) return;
+
+      const relativePath = normalizeCaseRelativePath(rootHandle, targetPath);
+      if (!relativePath) return;
+
+      const caseHandle = await getDirectoryHandleByRelativePath(rootHandle, relativePath);
+
+      const basePath = parentPathOf(targetPath);
+      const nextCaseTree = await scanDirectoryTree(caseHandle, basePath, 1);
+
+      const info = await readCaseSummary(caseHandle);
+      const nextSummary = makeCaseSummary(nextCaseTree.name, targetPath, info);
+
+      setDirTree((prev) => {
+        if (!prev) return prev;
+        return replaceDirNodeByPath(prev, targetPath, nextCaseTree);
+      });
+
+      setCases((prev) => {
+        const replaced = prev.map((c) => (c.path === targetPath ? nextSummary : c));
+        replaced.sort((a, b) => safeTime(b.updatedAt) - safeTime(a.updatedAt));
+        return replaced;
+      });
+    },
+    [rootHandle, selectedCasePath],
+  );
+
+  const expandDir = useCallback(
+    async (dirPath: string) => {
+      if (!rootHandle) return;
+
+      const ok = await requestPermission(rootHandle);
+      if (!ok) return;
+
+      const currentTree = dirTree;
+      const node = findDirNodeByPath(currentTree, dirPath);
+
+      if (!node) return;
+
+      const depth = depthFromPath(dirPath);
+      const basePath = parentPathOf(dirPath);
+
+      const expanded = await scanDirectoryTree(node.handle, basePath, depth, depth + 1);
+
+      setDirTree((prev) => {
+        if (!prev) return prev;
+        return replaceDirNodeByPath(prev, dirPath, expanded);
+      });
+
+      if (depth === 1) {
+        const info = await readCaseSummary(node.handle);
+        const nextSummary = makeCaseSummary(node.name, dirPath, info);
+
+        setCases((prev) => {
+          const replaced = prev.map((c) => (c.path === dirPath ? nextSummary : c));
+          replaced.sort((a, b) => safeTime(b.updatedAt) - safeTime(a.updatedAt));
+          return replaced;
+        });
+      }
+    },
+    [rootHandle, dirTree],
+  );
+
   const value = useMemo<WorkspaceContextValue>(
     () => ({
       rootHandle,
@@ -358,8 +491,20 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       selectCase,
       importFolder,
       refreshTree,
+      refreshCase,
+      expandDir,
     }),
-    [rootHandle, dirTree, cases, selectedCasePath, selectCase, importFolder, refreshTree],
+    [
+      rootHandle,
+      dirTree,
+      cases,
+      selectedCasePath,
+      selectCase,
+      importFolder,
+      refreshTree,
+      refreshCase,
+      expandDir,
+    ],
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

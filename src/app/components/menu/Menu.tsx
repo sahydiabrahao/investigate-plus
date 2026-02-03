@@ -16,6 +16,7 @@ import { CheckIcon, ReviewIcon, UrgentIcon, PendingIcon, WaitingIcon, NullIcon }
 
 type DirNodeWithStatus = Omit<DirNode, 'children'> & {
   status?: CaseStatus | null;
+  loaded?: boolean;
   children: Array<DirNodeWithStatus | FileNode>;
 };
 
@@ -36,7 +37,7 @@ function renderStatusIcon(s: CaseStatus | null | undefined, size = 18) {
 }
 
 export function Menu() {
-  const { dirTree, selectedCasePath, selectCase, rootHandle } = useWorkspace();
+  const { dirTree, selectedCasePath, selectCase, rootHandle, expandDir } = useWorkspace();
 
   return (
     <nav className='menu'>
@@ -60,6 +61,7 @@ export function Menu() {
               selectedCasePath={selectedCasePath}
               onSelectCase={selectCase}
               rootHandle={rootHandle}
+              onExpandDir={expandDir}
             />
           </ul>
         )}
@@ -74,12 +76,14 @@ function TreeItem({
   selectedCasePath,
   onSelectCase,
   rootHandle,
+  onExpandDir,
 }: {
   node: TreeNode;
   level: number;
   selectedCasePath: string | null;
   onSelectCase: (path: string | null) => void;
   rootHandle: FileSystemDirectoryHandle | null;
+  onExpandDir: (dirPath: string) => Promise<void>;
 }) {
   const isDir = node.type === 'directory';
   const visualLevel = Math.max(level - 1, 0);
@@ -93,6 +97,7 @@ function TreeItem({
   }, [isDir, selectedCasePath, node.path]);
 
   const [isOpen, setIsOpen] = useState<boolean>(shouldAutoOpen);
+  const [isExpanding, setIsExpanding] = useState<boolean>(false);
 
   useEffect(() => {
     if (shouldAutoOpen) setIsOpen(true);
@@ -109,7 +114,21 @@ function TreeItem({
     e.stopPropagation();
 
     if (isDir) {
-      setIsOpen((prev) => !prev);
+      if (isExpanding) return;
+
+      const willOpen = !isOpen;
+      setIsOpen(willOpen);
+
+      if (willOpen && node.loaded === false) {
+        try {
+          setIsExpanding(true);
+          await onExpandDir(node.path);
+        } catch {
+          // ignore
+        } finally {
+          setIsExpanding(false);
+        }
+      }
 
       if (isCaseCandidate) {
         onSelectCase(node.path);
@@ -155,6 +174,8 @@ function TreeItem({
 
   const caseStatus = isCaseCandidate && isDir ? (node.status ?? null) : null;
 
+  const caret = isDir ? (isExpanding ? '…' : isOpen ? '▾' : '▸') : '';
+
   return (
     <>
       <li className='menu__row' style={{ '--level': visualLevel } as React.CSSProperties}>
@@ -164,8 +185,9 @@ function TreeItem({
           onClick={(e) => handleClick(e)}
           aria-expanded={isDir ? isOpen : undefined}
           aria-current={isActiveCase ? 'true' : undefined}
+          aria-busy={isDir ? isExpanding : undefined}
         >
-          <span className='menu__caret'>{isDir ? (isOpen ? '▾' : '▸') : ''}</span>
+          <span className='menu__caret'>{caret}</span>
           <span className='menu__icon'>{isDir ? '📁' : '📄'}</span>
           <span className='menu__label'>{node.name}</span>
 
@@ -201,6 +223,7 @@ function TreeItem({
               selectedCasePath={selectedCasePath}
               onSelectCase={onSelectCase}
               rootHandle={rootHandle}
+              onExpandDir={onExpandDir}
             />
           ))}
         </>

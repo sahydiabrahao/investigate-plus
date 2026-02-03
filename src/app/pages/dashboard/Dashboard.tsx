@@ -78,7 +78,7 @@ async function createInvestigationFile(
 }
 
 export default function Dashboard() {
-  const { rootHandle, dirTree, selectedCasePath, refreshTree } = useWorkspace();
+  const { rootHandle, dirTree, selectedCasePath, refreshCase } = useWorkspace();
 
   const [state, setState] = useState<LoadState>({ status: 'idle' });
 
@@ -97,6 +97,8 @@ export default function Dashboard() {
 
   const metaInputRefs = useRef<Array<HTMLInputElement | HTMLTextAreaElement | null>>([]);
   const focusMetaIndexRef = useRef<number | null>(null);
+
+  const [isRefreshingCase, setIsRefreshingCase] = useState(false);
 
   const metaSuggestions = useMemo(() => [...META_SUGGESTIONS], []);
 
@@ -226,9 +228,21 @@ export default function Dashboard() {
       setSaveStatus('saving');
       await saveDraftToFile({ notesState: notesDraft, meta: metaDraft, status: next });
       setSaveStatus('saved');
-      await refreshTree();
+      await refreshCase();
     } catch {
       setSaveStatus('error');
+    }
+  }
+
+  async function handleRefreshCase() {
+    if (!selectedCasePath) return;
+    if (isRefreshingCase) return;
+
+    try {
+      setIsRefreshingCase(true);
+      await refreshCase(selectedCasePath);
+    } finally {
+      setIsRefreshingCase(false);
     }
   }
 
@@ -571,6 +585,16 @@ export default function Dashboard() {
             <button
               type='button'
               className='dashboard__btn'
+              onClick={handleRefreshCase}
+              disabled={isRefreshingCase}
+              title='Atualizar caso'
+            >
+              {isRefreshingCase ? 'Atualizando…' : 'Atualizar'}
+            </button>
+
+            <button
+              type='button'
+              className='dashboard__btn'
               onClick={() => setIsMetaAddOpen((v) => !v)}
               aria-haspopup='menu'
               aria-expanded={isMetaAddOpen}
@@ -595,10 +619,11 @@ export default function Dashboard() {
             )}
 
             <div className='dashboard__status'>
-              {saveStatus === 'saving' && 'Salvando…'}
-              {saveStatus === 'saved' && 'Salvo'}
-              {saveStatus === 'error' && 'Não foi possível salvar'}
-              {saveStatus === 'dirty' && 'Não salvo'}
+              {isRefreshingCase && 'Atualizando…'}
+              {!isRefreshingCase && saveStatus === 'saving' && 'Salvando…'}
+              {!isRefreshingCase && saveStatus === 'saved' && 'Salvo'}
+              {!isRefreshingCase && saveStatus === 'error' && 'Não foi possível salvar'}
+              {!isRefreshingCase && saveStatus === 'dirty' && 'Não salvo'}
             </div>
           </div>
         </div>
