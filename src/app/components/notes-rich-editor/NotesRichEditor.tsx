@@ -1,12 +1,11 @@
 import './NotesRichEditor.scss';
 
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import type { DirNode, FileNode } from '@/utils/read-directory-tree';
 
 import { toRelativePathFromRoot } from '@/utils/open-file';
 import { $createFileLinkNode } from '@/app/components/file-link-node/FileLinkNode';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ElementNode, RangeSelection, TextNode } from 'lexical';
 import {
   $getSelection,
@@ -31,6 +30,8 @@ import { $createParagraphNode, $getRoot } from 'lexical';
 import { FileLinkNode } from '@/app/components/file-link-node/FileLinkNode';
 import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 
+import { getDirectoryHandleByRelativePath } from '@/utils/get-directory-handle';
+
 type NotesRichEditorProps = {
   initialState?: unknown;
   onChange?: (state: unknown) => void;
@@ -43,14 +44,45 @@ type PatchStyleValue =
 
 type PatchStyleMap = Record<string, PatchStyleValue>;
 
-type FsNode = DirNode | FileNode;
-
 function copyToClipboard(text: string) {
   try {
     void navigator.clipboard?.writeText(text);
   } catch {
     // ignore
   }
+}
+
+async function listFilesUnderCaseHandle(
+  caseHandle: FileSystemDirectoryHandle,
+): Promise<Array<{ displayName: string; relativePath: string }>> {
+  const out: Array<{ displayName: string; relativePath: string }> = [];
+
+  async function walk(dir: FileSystemDirectoryHandle, basePath: string) {
+    for await (const entry of dir.values()) {
+      if (entry.kind === 'file') {
+        if (entry.name === 'investigacao.json') continue;
+
+        const rel = basePath ? `${basePath}/${entry.name}` : entry.name;
+        out.push({ displayName: entry.name, relativePath: rel });
+      }
+
+      if (entry.kind === 'directory') {
+        const nextBase = basePath ? `${basePath}/${entry.name}` : entry.name;
+        await walk(entry, nextBase);
+      }
+    }
+  }
+
+  await walk(caseHandle, '');
+
+  const collator = new Intl.Collator('pt-BR', {
+    numeric: true,
+    sensitivity: 'base',
+  });
+
+  out.sort((a, b) => collator.compare(a.displayName, b.displayName));
+
+  return out;
 }
 
 export default function NotesRichEditor({ initialState, onChange }: NotesRichEditorProps) {
@@ -118,46 +150,6 @@ export default function NotesRichEditor({ initialState, onChange }: NotesRichEdi
   );
 }
 
-function findDirNodeByPath(tree: DirNode, targetPath: string): DirNode | null {
-  if (tree.path === targetPath) return tree;
-
-  for (const child of tree.children as FsNode[]) {
-    if (child.path === targetPath) {
-      return child.type === 'directory' ? (child as DirNode) : null;
-    }
-
-    if (child.type === 'directory') {
-      const found = findDirNodeByPath(child as DirNode, targetPath);
-      if (found) return found;
-    }
-  }
-
-  return null;
-}
-
-function listFilesUnderCase(
-  caseNode: DirNode,
-): Array<{ displayName: string; relativePath: string }> {
-  const out: Array<{ displayName: string; relativePath: string }> = [];
-
-  function walk(node: DirNode, basePath: string) {
-    for (const child of node.children) {
-      if (child.type === 'file') {
-        if (child.name === 'investigacao.json') continue;
-
-        const rel = basePath ? `${basePath}/${child.name}` : child.name;
-        out.push({ displayName: child.name, relativePath: rel });
-      } else {
-        const nextBase = basePath ? `${basePath}/${child.name}` : child.name;
-        walk(child, nextBase);
-      }
-    }
-  }
-
-  walk(caseNode, '');
-  return out;
-}
-
 function Toolbar() {
   const [editor] = useLexicalComposerContext();
   const { dirTree, selectedCasePath, rootHandle } = useWorkspace();
@@ -166,9 +158,16 @@ function Toolbar() {
   const [isSymbolsOpen, setIsSymbolsOpen] = useState(false);
   const [isAttachOpen, setIsAttachOpen] = useState(false);
 
+  const [attachFiles, setAttachFiles] = useState<
+    Array<{ displayName: string; relativePath: string }>
+  >([]);
+  const [isAttachLoading, setIsAttachLoading] = useState(false);
+
   const colorPopoverRef = useRef<HTMLDivElement | null>(null);
   const symbolsPopoverRef = useRef<HTMLDivElement | null>(null);
   const attachPopoverRef = useRef<HTMLDivElement | null>(null);
+
+  const loadTokenRef = useRef(0);
 
   const COLORS: Array<{ name: string; value: string | null }> = [
     { name: 'Padrão', value: null },
@@ -206,15 +205,32 @@ function Toolbar() {
     });
   }
 
-  const attachFiles = useMemo(() => {
-    if (!dirTree) return [];
-    if (!selectedCasePath) return [];
+  async function ensureAttachFilesLoaded() {
+    if (!rootHandle) return;
+    if (!selectedCasePath) return;
 
-    const caseNode = findDirNodeByPath(dirTree as DirNode, selectedCasePath);
-    if (!caseNode) return [];
+    const currentToken = ++loadTokenRef.current;
 
-    return listFilesUnderCase(caseNode);
-  }, [dirTree, selectedCasePath]);
+    try {
+      setIsAttachLoading(true);
+
+      const relativeCasePath = toRelativePathFromRoot(rootHandle.name, selectedCasePath);
+      const caseHandle = await getDirectoryHandleByRelativePath(rootHandle, relativeCasePath);
+
+      const files = await listFilesUnderCaseHandle(caseHandle);
+
+      if (loadTokenRef.current !== currentToken) return;
+
+      setAttachFiles(files);
+    } catch {
+      if (loadTokenRef.current !== currentToken) return;
+      setAttachFiles([]);
+    } finally {
+      if (loadTokenRef.current === currentToken) {
+        setIsAttachLoading(false);
+      }
+    }
+  }
 
   function insertFileLink(relativePath: string, displayName: string) {
     if (!rootHandle) return;
@@ -239,6 +255,12 @@ function Toolbar() {
 
     setIsAttachOpen(false);
   }
+
+  useEffect(() => {
+    setAttachFiles([]);
+    setIsAttachLoading(false);
+    loadTokenRef.current++;
+  }, [selectedCasePath]);
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -359,9 +381,15 @@ function Toolbar() {
       <div className='notes-editor__popover-wrap' ref={attachPopoverRef}>
         <button
           type='button'
-          onClick={() => {
+          onClick={async () => {
             if (!canAttach) return;
-            setIsAttachOpen((v) => !v);
+
+            const nextOpen = !isAttachOpen;
+            setIsAttachOpen(nextOpen);
+
+            if (nextOpen) {
+              await ensureAttachFilesLoaded();
+            }
           }}
           aria-haspopup='menu'
           aria-expanded={isAttachOpen}
@@ -377,7 +405,9 @@ function Toolbar() {
             role='menu'
             aria-label='Arquivos do caso'
           >
-            {attachFiles.length === 0 ? (
+            {isAttachLoading ? (
+              <div className='notes-editor__loading'>…</div>
+            ) : attachFiles.length === 0 ? (
               <div className='notes-editor__empty-popover'>Nenhum arquivo encontrado no caso.</div>
             ) : (
               attachFiles.map((f) => (
