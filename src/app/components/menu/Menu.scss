@@ -5,6 +5,7 @@
   flex-direction: column;
   height: 100%;
   color: $color-text;
+  overflow-y: auto;
 }
 
 .menu__header {
