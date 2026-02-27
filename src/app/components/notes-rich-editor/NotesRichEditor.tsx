@@ -207,7 +207,6 @@ function Toolbar() {
   const [attachEntries, setAttachEntries] = useState<CaseEntry[]>([]);
   const [isAttachLoading, setIsAttachLoading] = useState(false);
 
-  // estado de expansão das pastas (persistente enquanto o caso não muda)
   const [expandedDirs, setExpandedDirs] = useState<Record<string, boolean>>({});
 
   const colorPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -226,11 +225,12 @@ function Toolbar() {
   ];
 
   const SYMBOLS: Array<{ name: string; value: string }> = [
-    { name: 'Hierarquia', value: '▸' },
-    { name: 'OK', value: '✔️' },
-    { name: 'Não', value: '❌' },
-    { name: 'Hora', value: '🕚' },
-    { name: 'Busca', value: '🔎' },
+    { name: 'Ctrl+.', value: '▸' },
+    { name: 'Ctrl+;', value: '└' },
+    { name: 'Concluído', value: '✔️' },
+    { name: 'Pendente', value: '❌' },
+    { name: 'Aguardando', value: '🕚' },
+    { name: 'Analisar', value: '🔎' },
   ];
 
   function applyTextColor(color: string | null) {
@@ -258,11 +258,15 @@ function Toolbar() {
       KEY_DOWN_COMMAND,
       (event: KeyboardEvent) => {
         const isMod = event.ctrlKey || event.metaKey;
+        if (!isMod) return false;
 
-        const isPeriod =
+        const isCtrlPeriod =
           event.key === '.' || event.code === 'Period' || event.key === '>' || event.key === '·';
 
-        if (!isMod || !isPeriod) return false;
+        const isCtrlSemicolon =
+          event.key === ';' || event.code === 'Semicolon' || event.key === ':';
+
+        if (!isCtrlPeriod && !isCtrlSemicolon) return false;
 
         event.preventDefault();
         event.stopPropagation();
@@ -270,7 +274,9 @@ function Toolbar() {
         editor.update(() => {
           const selection = $getSelection();
           if (!$isRangeSelection(selection)) return;
-          selection.insertText('▸ ');
+
+          if (isCtrlPeriod) selection.insertText('▸ ');
+          if (isCtrlSemicolon) selection.insertText('└ ');
         });
 
         return true;
@@ -297,7 +303,6 @@ function Toolbar() {
 
       setAttachEntries(entries);
 
-      // expande automaticamente as pastas do 1º nível (opcional)
       const nextExpanded: Record<string, boolean> = {};
       for (const e of entries) {
         if (e.type === 'directory') nextExpanded[e.relativePath] = true;
@@ -338,7 +343,6 @@ function Toolbar() {
     setIsAttachOpen(false);
   }
 
-  // ao trocar de caso: zera lista / loading / token e também expansão
   useEffect(() => {
     setAttachEntries([]);
     setIsAttachLoading(false);
@@ -508,7 +512,7 @@ function Toolbar() {
                   insertSymbol(s.value);
                   setIsSymbolsOpen(false);
                 }}
-                title={`${s.name} (insere e copia)`}
+                title={`${s.name} (copia e insere)`}
                 aria-label={s.name}
               >
                 {s.value}
