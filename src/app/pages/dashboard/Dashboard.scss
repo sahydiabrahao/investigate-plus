@@ -85,13 +85,13 @@
 }
 
 .dashboard__meta {
-  margin: 0 0 $space-12 0;
+  margin: 0 0 $space-4 0;
 }
 
 .dashboard__meta-list {
   display: flex;
   flex-wrap: wrap;
-  gap: $space-12;
+  gap: $space-4, $space-12;
 }
 
 .dashboard__row {
