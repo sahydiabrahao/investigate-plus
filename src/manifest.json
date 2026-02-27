@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Investigate+",
   "description": "Auxilia na organização, leitura e edição de informações de forma simples e eficiente.",
-  "version": "2.1.3",
+  "version": "2.1.4",
 
   "icons": {
     "16": "assets/investigator-icon.png",

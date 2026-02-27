@@ -11,8 +11,10 @@ import {
   $getSelection,
   $isRangeSelection,
   FORMAT_TEXT_COMMAND,
+  KEY_DOWN_COMMAND,
   REDO_COMMAND,
   UNDO_COMMAND,
+  COMMAND_PRIORITY_HIGH,
 } from 'lexical';
 import { $patchStyleText } from '@lexical/selection';
 
@@ -179,6 +181,7 @@ function Toolbar() {
   ];
 
   const SYMBOLS: Array<{ name: string; value: string }> = [
+    { name: 'Hierarquia', value: '▸' },
     { name: 'OK', value: '✔️' },
     { name: 'Não', value: '❌' },
     { name: 'Hora', value: '🕚' },
@@ -204,6 +207,38 @@ function Toolbar() {
       selection.insertText(symbol);
     });
   }
+
+  useEffect(() => {
+    return editor.registerCommand(
+      KEY_DOWN_COMMAND,
+      (event: KeyboardEvent) => {
+        // Windows/Linux: Ctrl+. | Mac: Cmd+.
+        const isMod = event.ctrlKey || event.metaKey;
+
+        // Mais robusto: key OU code
+        const isPeriod =
+          event.key === '.' ||
+          event.code === 'Period' ||
+          // fallback (alguns layouts):
+          event.key === '>' ||
+          event.key === '·';
+
+        if (!isMod || !isPeriod) return false;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) return;
+          selection.insertText('▸ ');
+        });
+
+        return true;
+      },
+      COMMAND_PRIORITY_HIGH,
+    );
+  }, [editor]);
 
   async function ensureAttachFilesLoaded() {
     if (!rootHandle) return;

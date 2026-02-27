@@ -27,16 +27,13 @@
   }
 }
 
-/* ✅ NÃO use width/height fixos em emoji */
 .file-link__icon {
-  display: inline-block; // ou inline-flex, tanto faz aqui
-  font-size: 1em; // tamanho “real” do emoji igual ao texto
-  line-height: 1; // evita aumentar a altura da linha
-  vertical-align: -0.1em; // pequeno ajuste óptico (opcional)
-  margin-right: 2px; // respiro (opcional)
+  display: inline-block;
+  font-size: 1em;
+  line-height: 1;
+  vertical-align: -0.1em;
+  margin-right: 2px;
 
-  /* Se você quiser alinhar todos os ícones (🔗/⚠️) sem esmagar:
-     mantém uma “coluna” mínima, sem forçar tamanho */
   min-width: 1.1em;
   text-align: center;
 }
