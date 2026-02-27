@@ -5,7 +5,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { toRelativePathFromRoot } from '@/utils/open-file';
 import { $createFileLinkNode } from '@/app/components/file-link-node/FileLinkNode';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ElementNode, RangeSelection, TextNode } from 'lexical';
 import {
   $getSelection,
@@ -46,6 +46,19 @@ type PatchStyleValue =
 
 type PatchStyleMap = Record<string, PatchStyleValue>;
 
+type CaseEntry =
+  | {
+      type: 'file';
+      displayName: string;
+      relativePath: string; // relativo ao caso
+    }
+  | {
+      type: 'directory';
+      name: string;
+      relativePath: string; // relativo ao caso (pasta)
+      children: CaseEntry[];
+    };
+
 function copyToClipboard(text: string) {
   try {
     void navigator.clipboard?.writeText(text);
@@ -54,37 +67,68 @@ function copyToClipboard(text: string) {
   }
 }
 
-async function listFilesUnderCaseHandle(
-  caseHandle: FileSystemDirectoryHandle,
-): Promise<Array<{ displayName: string; relativePath: string }>> {
-  const out: Array<{ displayName: string; relativePath: string }> = [];
+function compareNamesPtBr(a: string, b: string) {
+  const collator = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' });
+  return collator.compare(a, b);
+}
 
-  async function walk(dir: FileSystemDirectoryHandle, basePath: string) {
+function sortEntries(entries: CaseEntry[]) {
+  // pastas primeiro, depois arquivos; ambos ordenados
+  entries.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+    if (a.type === 'directory' && b.type === 'directory') return compareNamesPtBr(a.name, b.name);
+    if (a.type === 'file' && b.type === 'file')
+      return compareNamesPtBr(a.displayName, b.displayName);
+    return 0;
+  });
+
+  for (const e of entries) {
+    if (e.type === 'directory') sortEntries(e.children);
+  }
+}
+
+async function listEntriesUnderCaseHandle(
+  caseHandle: FileSystemDirectoryHandle,
+): Promise<CaseEntry[]> {
+  async function buildTree(dir: FileSystemDirectoryHandle, basePath: string): Promise<CaseEntry[]> {
+    const out: CaseEntry[] = [];
+
     for await (const entry of dir.values()) {
       if (entry.kind === 'file') {
         if (entry.name === 'investigacao.json') continue;
 
         const rel = basePath ? `${basePath}/${entry.name}` : entry.name;
-        out.push({ displayName: entry.name, relativePath: rel });
+
+        out.push({
+          type: 'file',
+          displayName: entry.name,
+          relativePath: rel,
+        });
       }
 
       if (entry.kind === 'directory') {
         const nextBase = basePath ? `${basePath}/${entry.name}` : entry.name;
-        await walk(entry, nextBase);
+
+        const children = await buildTree(entry, nextBase);
+
+        // se quiser esconder pastas vazias, descomente:
+        // if (children.length === 0) continue;
+
+        out.push({
+          type: 'directory',
+          name: entry.name,
+          relativePath: nextBase,
+          children,
+        });
       }
     }
+
+    return out;
   }
 
-  await walk(caseHandle, '');
-
-  const collator = new Intl.Collator('pt-BR', {
-    numeric: true,
-    sensitivity: 'base',
-  });
-
-  out.sort((a, b) => collator.compare(a.displayName, b.displayName));
-
-  return out;
+  const tree = await buildTree(caseHandle, '');
+  sortEntries(tree);
+  return tree;
 }
 
 export default function NotesRichEditor({ initialState, onChange }: NotesRichEditorProps) {
@@ -160,10 +204,11 @@ function Toolbar() {
   const [isSymbolsOpen, setIsSymbolsOpen] = useState(false);
   const [isAttachOpen, setIsAttachOpen] = useState(false);
 
-  const [attachFiles, setAttachFiles] = useState<
-    Array<{ displayName: string; relativePath: string }>
-  >([]);
+  const [attachEntries, setAttachEntries] = useState<CaseEntry[]>([]);
   const [isAttachLoading, setIsAttachLoading] = useState(false);
+
+  // estado de expansão das pastas (persistente enquanto o caso não muda)
+  const [expandedDirs, setExpandedDirs] = useState<Record<string, boolean>>({});
 
   const colorPopoverRef = useRef<HTMLDivElement | null>(null);
   const symbolsPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -246,14 +291,22 @@ function Toolbar() {
       const relativeCasePath = toRelativePathFromRoot(rootHandle.name, selectedCasePath);
       const caseHandle = await getDirectoryHandleByRelativePath(rootHandle, relativeCasePath);
 
-      const files = await listFilesUnderCaseHandle(caseHandle);
+      const entries = await listEntriesUnderCaseHandle(caseHandle);
 
       if (loadTokenRef.current !== currentToken) return;
 
-      setAttachFiles(files);
+      setAttachEntries(entries);
+
+      // expande automaticamente as pastas do 1º nível (opcional)
+      const nextExpanded: Record<string, boolean> = {};
+      for (const e of entries) {
+        if (e.type === 'directory') nextExpanded[e.relativePath] = true;
+      }
+      setExpandedDirs(nextExpanded);
     } catch {
       if (loadTokenRef.current !== currentToken) return;
-      setAttachFiles([]);
+      setAttachEntries([]);
+      setExpandedDirs({});
     } finally {
       if (loadTokenRef.current === currentToken) {
         setIsAttachLoading(false);
@@ -285,9 +338,11 @@ function Toolbar() {
     setIsAttachOpen(false);
   }
 
+  // ao trocar de caso: zera lista / loading / token e também expansão
   useEffect(() => {
-    setAttachFiles([]);
+    setAttachEntries([]);
     setIsAttachLoading(false);
+    setExpandedDirs({});
     loadTokenRef.current++;
   }, [selectedCasePath]);
 
@@ -310,6 +365,62 @@ function Toolbar() {
   }, []);
 
   const canAttach = Boolean(rootHandle && dirTree && selectedCasePath);
+
+  const attachmentTree = useMemo(() => {
+    function renderEntries(entries: CaseEntry[], level: number): React.ReactNode {
+      return entries.map((entry) => {
+        if (entry.type === 'file') {
+          const ext = entry.displayName.split('.').pop()?.toLowerCase() ?? '';
+          return (
+            <button
+              key={entry.relativePath}
+              type='button'
+              className='notes-editor__attachment-item notes-editor__attachment-file'
+              style={{ paddingLeft: 8 + level * 14 }}
+              onClick={() => insertFileLink(entry.relativePath, entry.displayName)}
+              title={entry.relativePath}
+              data-ext={ext}
+            >
+              <span className='notes-editor__attachment-label'>{entry.displayName}</span>
+            </button>
+          );
+        }
+
+        const isOpen = expandedDirs[entry.relativePath] ?? false;
+
+        return (
+          <div key={entry.relativePath} className='notes-editor__attachment-group'>
+            <button
+              type='button'
+              className='notes-editor__attachment-item notes-editor__attachment-folder'
+              style={{ paddingLeft: 8 + level * 14 }}
+              onClick={() =>
+                setExpandedDirs((prev) => ({
+                  ...prev,
+                  [entry.relativePath]: !isOpen,
+                }))
+              }
+              title={entry.relativePath}
+              aria-expanded={isOpen}
+            >
+              <span className='notes-editor__folder-caret' aria-hidden='true'>
+                {isOpen ? '▾' : '▸'}
+              </span>
+              <span className='notes-editor__attachment-label'>{entry.name}</span>
+            </button>
+
+            {isOpen && (
+              <div className='notes-editor__attachment-children'>
+                {renderEntries(entry.children, level + 1)}
+              </div>
+            )}
+          </div>
+        );
+      });
+    }
+
+    return renderEntries(attachEntries, 0);
+  }, [attachEntries, expandedDirs]);
 
   return (
     <div className='notes-editor__toolbar'>
@@ -436,20 +547,10 @@ function Toolbar() {
           >
             {isAttachLoading ? (
               <div className='notes-editor__loading'>…</div>
-            ) : attachFiles.length === 0 ? (
+            ) : attachEntries.length === 0 ? (
               <div className='notes-editor__empty-popover'>Nenhum arquivo encontrado no caso.</div>
             ) : (
-              attachFiles.map((f) => (
-                <button
-                  key={f.relativePath}
-                  type='button'
-                  className='notes-editor__symbol'
-                  onClick={() => insertFileLink(f.relativePath, f.displayName)}
-                  title={f.relativePath}
-                >
-                  {f.displayName}
-                </button>
-              ))
+              <div className='notes-editor__attachments-tree'>{attachmentTree}</div>
             )}
           </div>
         )}
