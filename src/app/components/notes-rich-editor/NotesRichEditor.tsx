@@ -212,16 +212,10 @@ function Toolbar() {
     return editor.registerCommand(
       KEY_DOWN_COMMAND,
       (event: KeyboardEvent) => {
-        // Windows/Linux: Ctrl+. | Mac: Cmd+.
         const isMod = event.ctrlKey || event.metaKey;
 
-        // Mais robusto: key OU code
         const isPeriod =
-          event.key === '.' ||
-          event.code === 'Period' ||
-          // fallback (alguns layouts):
-          event.key === '>' ||
-          event.key === '·';
+          event.key === '.' || event.code === 'Period' || event.key === '>' || event.key === '·';
 
         if (!isMod || !isPeriod) return false;
 
