@@ -29,9 +29,8 @@
 
   border-bottom: 1px solid rgba(17, 24, 39, 0.06);
 
-  /* ✅ aplica estilo SOMENTE nos botões diretos da toolbar
-     (não afeta botões dentro dos popovers) */
-  > button {
+  > button,
+  > .notes-editor__popover-wrap > button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -92,9 +91,7 @@
 .notes-editor__placeholder {
   position: absolute;
   left: 0;
-
-  top: 61px;
-
+  top: calc(#{$size-32} + #{$space-8} + #{$space-12});
   padding: 0;
   color: $color-text-dark-muted;
   opacity: 0.7;
@@ -117,7 +114,6 @@
   padding: $space-8;
 
   border-radius: $radius-8;
-
   background: $color-bg;
   border: 1px solid rgba(17, 24, 39, 0.12);
   box-shadow: 0 8px 24px rgba(17, 24, 39, 0.1);
@@ -171,7 +167,7 @@
 
   cursor: pointer;
   background: transparent;
-  color: rgba(39, 17, 17, 0.85);
+  color: $color-text;
 
   &:hover {
     background: rgba(17, 24, 39, 0.06);
@@ -182,23 +178,6 @@
     box-shadow: $focus-ring;
   }
 }
-
-.notes-editor__bold {
-  font-weight: $font-weight-bold;
-}
-.notes-editor__italic {
-  font-style: italic;
-}
-.notes-editor__underline {
-  text-decoration: underline;
-}
-.notes-editor__paragraph {
-  margin: 0;
-}
-
-/* -----------------------------
-   POPOVER: ATTACHMENTS (tree)
------------------------------- */
 
 .notes-editor__popover--attachments {
   display: flex;
@@ -246,7 +225,6 @@
 
   &:hover {
     background: $color-nav-active;
-    color: $color-text;
   }
 }
 
@@ -277,16 +255,30 @@
   flex: 0 0 auto;
 }
 
+.notes-editor__bold {
+  font-weight: $font-weight-bold;
+}
+
+.notes-editor__italic {
+  font-style: italic;
+}
+
+.notes-editor__underline {
+  text-decoration: underline;
+}
+
+.notes-editor__paragraph {
+  margin: 0;
+}
+
 .notes-editor__loading {
   padding: 8px;
   text-align: center;
-
   color: $color-text-dark-muted;
   font-size: 18px;
   letter-spacing: 2px;
 }
 
-/* seu ajuste de indent do Lexical */
 .notes-editor__content p[style*='padding-inline-start: calc(40px)'] {
   padding-inline-start: 14px !important;
 }
