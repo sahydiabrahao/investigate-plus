@@ -3,20 +3,42 @@
 .file-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 
-  padding: 1px 6px;
-  border-radius: 6px;
+  padding: 0;
+  border-radius: 4px;
 
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  border: 1px solid transparent;
 
-  cursor: pointer;
   user-select: none;
+  line-height: 1;
+  vertical-align: middle;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    padding 0.15s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    padding: 0 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
   }
+}
+
+/* ✅ NÃO use width/height fixos em emoji */
+.file-link__icon {
+  display: inline-block; // ou inline-flex, tanto faz aqui
+  font-size: 1em; // tamanho “real” do emoji igual ao texto
+  line-height: 1; // evita aumentar a altura da linha
+  vertical-align: -0.1em; // pequeno ajuste óptico (opcional)
+  margin-right: 2px; // respiro (opcional)
+
+  /* Se você quiser alinhar todos os ícones (🔗/⚠️) sem esmagar:
+     mantém uma “coluna” mínima, sem forçar tamanho */
+  min-width: 1.1em;
+  text-align: center;
 }
 
 .file-link--missing {

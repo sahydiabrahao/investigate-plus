@@ -49,17 +49,13 @@ export default function FileLink({ data }: FileLinkProps) {
         }
       }}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '1px 6px',
-        borderRadius: 6,
         cursor: rootHandle ? 'pointer' : 'not-allowed',
-        userSelect: 'none',
         opacity: rootHandle ? 1 : 0.6,
       }}
     >
-      <span aria-hidden>{isMissing ? '⚠️' : '🔗'}</span>
+      <span className='file-link__icon' aria-hidden>
+        {isMissing ? '⚠️' : '🔗'}
+      </span>
     </span>
   );
 }
