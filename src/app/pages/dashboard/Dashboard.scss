@@ -91,7 +91,7 @@
 .dashboard__meta-list {
   display: flex;
   flex-wrap: wrap;
-  gap: $space-4, $space-12;
+  gap: $space-4 $space-12;
 }
 
 .dashboard__row {
@@ -227,33 +227,52 @@
   top: calc(100% + #{$space-8});
   right: 0;
 
-  width: 220px;
+  width: 260px;
   max-width: calc(100vw - 24px);
 
   padding: $space-6;
-  border-radius: $radius-8;
+  border-radius: $radius-12;
 
   background: $color-bg;
-  backdrop-filter: blur(10px);
-
-  border: 1px solid rgba(17, 24, 39, 0.08);
-  box-shadow:
-    0 10px 30px rgba(17, 24, 39, 0.1),
-    0 2px 8px rgba(17, 24, 39, 0.06);
+  border: 1px solid $color-border;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 
   z-index: 60;
 
   display: flex;
   flex-direction: column;
-  gap: $space-2;
+  gap: $space-6;
+}
+
+.dashboard__meta-popover::before {
+  content: 'Adicionar metadado';
+  display: block;
+  padding: $space-6 $space-8 $space-4 $space-8;
+
+  font-size: $font-12;
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.2px;
+
+  color: $color-text-muted;
+}
+
+.dashboard__meta-popover {
+  .dashboard__meta-popover-item {
+    margin: 0;
+  }
+}
+
+.dashboard__meta-popover {
+  max-height: min(60vh, 360px);
+  overflow: auto;
 }
 
 .dashboard__meta-popover-item {
   width: 100%;
   text-align: left;
 
-  padding: $space-8 $space-10;
-  border-radius: $radius-6;
+  padding: $space-10 $space-10;
+  border-radius: $radius-10;
 
   font-size: $font-13;
   font-weight: $font-weight-medium;
@@ -265,8 +284,7 @@
 
   transition:
     background 120ms ease,
-    transform 120ms ease,
-    color 120ms ease;
+    transform 120ms ease;
 
   &:hover {
     background: $color-nav-active;
@@ -279,7 +297,7 @@
   &:focus-visible {
     outline: none;
     box-shadow: $focus-ring;
-    background: rgba(17, 24, 39, 0.08);
+    background: $color-nav-active;
   }
 }
 

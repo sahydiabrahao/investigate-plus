@@ -1,0 +1,261 @@
+@use '@/styles/global' as *;
+
+.slash-manager {
+  position: relative;
+  display: inline-flex;
+}
+
+.slash-manager__btn {
+  width: $size-32;
+  height: $size-32;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: $radius-8;
+  cursor: pointer;
+  color: #6b7280;
+
+  &:hover {
+    color: $color-text-dark;
+    background: $color-action-hover;
+  }
+
+  &:active {
+    transform: translateY(0.5px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.slash-manager__popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+
+  width: 420px;
+  max-width: 75vw;
+
+  background: $color-bg;
+  color: $color-text;
+
+  border: 1px solid $color-border;
+  border-radius: $radius-12;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+
+  overflow: hidden;
+  z-index: 50;
+}
+
+.slash-manager__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: $space-10;
+  border-bottom: 1px solid $color-border;
+}
+
+.slash-manager__top-right {
+  display: inline-flex;
+  gap: $space-8;
+}
+
+.slash-manager__top-btn {
+  padding: $space-6 $space-10;
+  border-radius: $radius-8;
+
+  cursor: pointer;
+  font-size: $font-13;
+  font-weight: $font-weight-medium;
+  color: $color-text;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.slash-manager__body {
+  padding: $space-10;
+}
+
+.slash-manager__empty {
+  padding: $space-10;
+  color: $color-text-muted;
+  font-size: $font-13;
+}
+
+.slash-manager__list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+  margin-bottom: $space-12;
+
+  max-height: 260px;
+  overflow: auto;
+}
+
+.slash-manager__row {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: $space-10;
+
+  padding: $space-8 $space-10;
+  border-radius: $radius-10;
+
+  cursor: pointer;
+
+  border: 1px solid $color-border;
+  background: transparent;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+}
+
+.slash-manager__row-trigger {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: $font-13;
+  color: $color-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slash-manager__row-preview {
+  font-size: $font-13;
+  color: $color-text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slash-manager__panel {
+  margin-top: $space-10;
+  padding-top: $space-10;
+  border-top: 1px solid $color-border;
+}
+
+.slash-manager__panel-title {
+  font-size: $font-13;
+  font-weight: $font-weight-bold;
+  margin-bottom: $space-10;
+}
+
+.slash-manager__label {
+  display: block;
+  font-size: $font-13;
+  font-weight: $font-weight-medium;
+  color: $color-text;
+
+  margin-bottom: $space-10;
+}
+
+.slash-manager__input,
+.slash-manager__textarea {
+  width: 100%;
+  margin-top: $space-6;
+
+  padding: $space-8 $space-10;
+
+  border-radius: $radius-10;
+  border: 1px solid $color-border;
+  background: rgba(255, 255, 255, 0.04);
+
+  color: $color-text;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.slash-manager__textarea {
+  resize: vertical;
+  min-height: 84px;
+}
+
+.slash-manager__textarea--export {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: $font-12;
+  line-height: $line-height-16;
+}
+
+.slash-manager__actions {
+  display: flex;
+  gap: $space-8;
+  justify-content: flex-end;
+
+  margin-top: $space-10;
+}
+
+.slash-manager__action {
+  padding: $space-8 $space-12;
+  border-radius: $radius-10;
+  cursor: pointer;
+
+  font-size: $font-13;
+  font-weight: $font-weight-medium;
+
+  border: 1px solid $color-border;
+  color: $color-text;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.slash-manager__action--primary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: $color-text;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+}
+
+.slash-manager__action--danger {
+  background: rgba(185, 28, 28, 0.16);
+  border-color: rgba(185, 28, 28, 0.35);
+  color: $color-text;
+
+  &:hover {
+    background: rgba(185, 28, 28, 0.22);
+  }
+}
+
+.slash-manager__error {
+  margin-top: $space-10;
+  font-size: $font-13;
+  color: $color-status-urgent;
+}
+
+.slash-manager__file {
+  display: none;
+}

@@ -1,0 +1,70 @@
+@use '@/styles/global' as *;
+
+.slash-commands {
+  width: 420px;
+  max-width: 75vw;
+
+  background: $color-bg;
+  color: $color-text;
+
+  border: 1px solid $color-border;
+  border-radius: $radius-12;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+
+  overflow: hidden;
+  z-index: 70;
+}
+
+.slash-commands__empty {
+  padding: $space-10;
+  font-size: $font-13;
+  color: $color-text-muted;
+}
+
+.slash-commands__list {
+  display: flex;
+  flex-direction: column;
+  padding: $space-6;
+  gap: $space-4;
+
+  max-height: 260px;
+  overflow: auto;
+}
+
+.slash-commands__item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: $space-10;
+
+  padding: $space-8 $space-10;
+  border-radius: $radius-10;
+  cursor: pointer;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &.is-active {
+    background: $color-nav-active;
+  }
+}
+
+.slash-commands__trigger {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: $font-13;
+  color: $color-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slash-commands__preview {
+  font-size: $font-13;
+  color: $color-text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

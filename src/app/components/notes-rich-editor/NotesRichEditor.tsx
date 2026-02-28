@@ -32,6 +32,8 @@ import { FileLinkNode } from '@/app/components/file-link-node/FileLinkNode';
 import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 
 import { getDirectoryHandleByRelativePath } from '@/utils/get-directory-handle';
+import SlashCommandsManager from '@/app/components/notes-rich-editor/slash-commands-manager/SlashCommandsManager';
+import SlashCommandsPlugin from '@/app/components/notes-rich-editor/plugins/SlashCommandsPlugin';
 
 type NotesRichEditorProps = {
   initialState?: unknown;
@@ -179,6 +181,7 @@ export default function NotesRichEditor({ initialState, onChange }: NotesRichEdi
 
         <HistoryPlugin />
         <TabIndentationPlugin />
+        <SlashCommandsPlugin />
 
         <OnChangePlugin
           onChange={(editorState: EditorState) => {
@@ -512,7 +515,6 @@ function Toolbar() {
         )}
       </div>
 
-      {/* Marca-texto */}
       <div className='notes-editor__popover-wrap' ref={highlightPopoverRef}>
         <button
           type='button'
@@ -580,6 +582,8 @@ function Toolbar() {
           </div>
         )}
       </div>
+
+      <SlashCommandsManager />
 
       <div className='notes-editor__popover-wrap' ref={attachPopoverRef}>
         <button
