@@ -144,6 +144,12 @@
   }
 }
 
+.notes-editor__swatch--highlight {
+  .notes-editor__dot {
+    border-radius: 6px;
+  }
+}
+
 .notes-editor__dot {
   width: $size-16;
   height: $size-16;
