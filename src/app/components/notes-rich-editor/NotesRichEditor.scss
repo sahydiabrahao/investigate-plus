@@ -91,7 +91,7 @@
 .notes-editor__placeholder {
   position: absolute;
   left: 0;
-  top: calc(#{$size-32} + #{$space-8} + #{$space-12});
+  top: 61px;
   padding: 0;
   color: $color-text-dark-muted;
   opacity: 0.7;
@@ -141,6 +141,12 @@
   &:focus-visible {
     outline: none;
     box-shadow: $focus-ring;
+  }
+}
+
+.notes-editor__swatch--highlight {
+  .notes-editor__dot {
+    border-radius: 6px;
   }
 }
 

@@ -1,11 +1,10 @@
 import './NotesRichEditor.scss';
 
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-
 import { toRelativePathFromRoot } from '@/utils/open-file';
 import { $createFileLinkNode } from '@/app/components/file-link-node/FileLinkNode';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { ElementNode, RangeSelection, TextNode } from 'lexical';
 import {
   $getSelection,
@@ -50,12 +49,12 @@ type CaseEntry =
   | {
       type: 'file';
       displayName: string;
-      relativePath: string; // relativo ao caso
+      relativePath: string;
     }
   | {
       type: 'directory';
       name: string;
-      relativePath: string; // relativo ao caso (pasta)
+      relativePath: string;
       children: CaseEntry[];
     };
 
@@ -73,7 +72,6 @@ function compareNamesPtBr(a: string, b: string) {
 }
 
 function sortEntries(entries: CaseEntry[]) {
-  // pastas primeiro, depois arquivos; ambos ordenados
   entries.sort((a, b) => {
     if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
     if (a.type === 'directory' && b.type === 'directory') return compareNamesPtBr(a.name, b.name);
@@ -110,9 +108,6 @@ async function listEntriesUnderCaseHandle(
         const nextBase = basePath ? `${basePath}/${entry.name}` : entry.name;
 
         const children = await buildTree(entry, nextBase);
-
-        // se quiser esconder pastas vazias, descomente:
-        // if (children.length === 0) continue;
 
         out.push({
           type: 'directory',
@@ -201,6 +196,7 @@ function Toolbar() {
   const { dirTree, selectedCasePath, rootHandle } = useWorkspace();
 
   const [isColorOpen, setIsColorOpen] = useState(false);
+  const [isHighlightOpen, setIsHighlightOpen] = useState(false);
   const [isSymbolsOpen, setIsSymbolsOpen] = useState(false);
   const [isAttachOpen, setIsAttachOpen] = useState(false);
 
@@ -210,6 +206,7 @@ function Toolbar() {
   const [expandedDirs, setExpandedDirs] = useState<Record<string, boolean>>({});
 
   const colorPopoverRef = useRef<HTMLDivElement | null>(null);
+  const highlightPopoverRef = useRef<HTMLDivElement | null>(null);
   const symbolsPopoverRef = useRef<HTMLDivElement | null>(null);
   const attachPopoverRef = useRef<HTMLDivElement | null>(null);
 
@@ -217,11 +214,22 @@ function Toolbar() {
 
   const COLORS: Array<{ name: string; value: string | null }> = [
     { name: 'Padrão', value: null },
+    { name: 'Cinza', value: '#4b5563' },
     { name: 'Amarelo', value: '#ca8a04' },
     { name: 'Verde', value: '#15803d' },
     { name: 'Azul', value: '#1e40af' },
     { name: 'Rosa', value: '#be185d' },
     { name: 'Vermelho', value: '#991b1b' },
+  ];
+
+  const HIGHLIGHTS: Array<{ name: string; value: string | null }> = [
+    { name: 'Sem marcação', value: null },
+    { name: 'Cinza', value: 'rgba(156, 163, 175, 0.40)' },
+    { name: 'Amarelo', value: 'rgba(250, 204, 21, 0.35)' },
+    { name: 'Verde', value: 'rgba(34, 197, 94, 0.28)' },
+    { name: 'Azul', value: 'rgba(59, 130, 246, 0.20)' },
+    { name: 'Rosa', value: 'rgba(190, 24, 93, 0.22)' },
+    { name: 'Vermelho', value: 'rgba(239, 68, 68, 0.35)' },
   ];
 
   const SYMBOLS: Array<{ name: string; value: string }> = [
@@ -237,8 +245,20 @@ function Toolbar() {
     editor.update(() => {
       const selection = $getSelection();
       if (!$isRangeSelection(selection)) return;
-
       const styles: PatchStyleMap = { color };
+      $patchStyleText(selection, styles);
+    });
+  }
+
+  function applyHighlight(bg: string | null) {
+    editor.update(() => {
+      const selection = $getSelection();
+      if (!$isRangeSelection(selection)) return;
+
+      const styles: PatchStyleMap = {
+        background: bg,
+      };
+
       $patchStyleText(selection, styles);
     });
   }
@@ -356,10 +376,12 @@ function Toolbar() {
       if (!(t instanceof Node)) return;
 
       const inColor = colorPopoverRef.current?.contains(t) ?? false;
+      const inHighlight = highlightPopoverRef.current?.contains(t) ?? false;
       const inSymbols = symbolsPopoverRef.current?.contains(t) ?? false;
       const inAttach = attachPopoverRef.current?.contains(t) ?? false;
 
       if (!inColor) setIsColorOpen(false);
+      if (!inHighlight) setIsHighlightOpen(false);
       if (!inSymbols) setIsSymbolsOpen(false);
       if (!inAttach) setIsAttachOpen(false);
     }
@@ -490,6 +512,43 @@ function Toolbar() {
         )}
       </div>
 
+      {/* Marca-texto */}
+      <div className='notes-editor__popover-wrap' ref={highlightPopoverRef}>
+        <button
+          type='button'
+          onClick={() => setIsHighlightOpen((v) => !v)}
+          aria-haspopup='menu'
+          aria-expanded={isHighlightOpen}
+          title='Marca-texto'
+        >
+          HL
+        </button>
+
+        {isHighlightOpen && (
+          <div className='notes-editor__popover' role='menu' aria-label='Marca-texto'>
+            {HIGHLIGHTS.map((h) => (
+              <button
+                key={h.name}
+                type='button'
+                className='notes-editor__swatch notes-editor__swatch--highlight'
+                onClick={() => {
+                  applyHighlight(h.value);
+                  setIsHighlightOpen(false);
+                }}
+                title={h.name}
+                aria-label={h.name}
+              >
+                <span
+                  className='notes-editor__dot'
+                  style={{ background: h.value ?? 'transparent' }}
+                  data-empty={h.value === null ? 'true' : 'false'}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className='notes-editor__popover-wrap' ref={symbolsPopoverRef}>
         <button
           type='button'
@@ -498,7 +557,7 @@ function Toolbar() {
           aria-expanded={isSymbolsOpen}
           title='Inserir símbolos'
         >
-          ⋯
+          ⚑
         </button>
 
         {isSymbolsOpen && (
