@@ -1,10 +1,8 @@
-import './SlashCommandsManager.scss';
+import './TagsManager.scss';
 
 import React, { useMemo, useRef, useState } from 'react';
-import { useSlashCommands } from '@/app/hooks/useSlashCommands';
-import type { SlashCommand } from '@/types/slash-commands.types';
-
-import TagAutocompleteTextarea from './TagAutocompleteTextarea';
+import { useTags } from '@/app/hooks/useTags';
+import type { TagDefinition, TagStyleId } from '@/types/tag.types';
 
 type Mode =
   | { type: 'idle' }
@@ -34,22 +32,28 @@ function readFileAsText(file: File): Promise<string> {
   });
 }
 
-export default function SlashCommandsManager() {
-  const {
-    loading,
-    items,
-    addCommand,
-    updateCommand,
-    removeCommand,
-    importFromJsonText,
-    exportToJsonText,
-  } = useSlashCommands();
+function styleLabel(styleId: TagStyleId) {
+  const map: Record<TagStyleId, string> = {
+    1: 'Amarelo',
+    2: 'Verde',
+    3: 'Azul',
+    4: 'Rosa',
+    5: 'Vermelho',
+  };
+  return map[styleId];
+}
+
+const STYLE_IDS: readonly TagStyleId[] = [1, 2, 3, 4, 5] as const;
+
+export default function TagsManager() {
+  const { loading, items, addTag, updateTag, removeTag, importFromJsonText, exportToJsonText } =
+    useTags();
 
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>({ type: 'idle' });
 
-  const [triggerDraft, setTriggerDraft] = useState('');
-  const [templateDraft, setTemplateDraft] = useState('');
+  const [labelDraft, setLabelDraft] = useState('');
+  const [styleDraft, setStyleDraft] = useState<TagStyleId>(1);
 
   const [importError, setImportError] = useState<string | null>(null);
   const [importBusy, setImportBusy] = useState(false);
@@ -59,14 +63,14 @@ export default function SlashCommandsManager() {
 
   const exportText = useMemo(() => exportToJsonText(), [exportToJsonText]);
 
-  const editingItem: SlashCommand | null = useMemo(() => {
+  const editingItem: TagDefinition | null = useMemo(() => {
     if (mode.type !== 'edit') return null;
     return items.find((x) => x.id === mode.id) ?? null;
   }, [items, mode]);
 
   function resetDrafts() {
-    setTriggerDraft('');
-    setTemplateDraft('');
+    setLabelDraft('');
+    setStyleDraft(1);
   }
 
   function closeAll() {
@@ -83,9 +87,9 @@ export default function SlashCommandsManager() {
     setMode({ type: 'create' });
   }
 
-  function openEdit(item: SlashCommand) {
-    setTriggerDraft(item.trigger);
-    setTemplateDraft(item.template);
+  function openEdit(item: TagDefinition) {
+    setLabelDraft(item.label);
+    setStyleDraft(item.styleId);
     setImportError(null);
     setMode({ type: 'edit', id: item.id });
   }
@@ -101,19 +105,25 @@ export default function SlashCommandsManager() {
   }
 
   async function submitCreate() {
-    await addCommand({ trigger: triggerDraft, template: templateDraft });
+    await addTag({
+      label: labelDraft,
+      styleId: styleDraft,
+    });
     setMode({ type: 'idle' });
     resetDrafts();
   }
 
   async function submitEdit(id: string) {
-    await updateCommand(id, { trigger: triggerDraft, template: templateDraft });
+    await updateTag(id, {
+      label: labelDraft,
+      styleId: styleDraft,
+    });
     setMode({ type: 'idle' });
     resetDrafts();
   }
 
   async function submitRemove(id: string) {
-    await removeCommand(id);
+    await removeTag(id);
     if (mode.type === 'edit' && mode.id === id) {
       setMode({ type: 'idle' });
       resetDrafts();
@@ -154,59 +164,60 @@ export default function SlashCommandsManager() {
     return () => document.removeEventListener('mousedown', onDocMouseDown);
   }, [open]);
 
+  const canSave = labelDraft.trim().length > 0;
+
   return (
-    <div className='slash-manager' ref={wrapRef}>
+    <div className='tags-manager' ref={wrapRef}>
       <button
         type='button'
-        className='slash-manager__btn'
+        className='tags-manager__btn'
         onClick={() => {
           const next = !open;
           setOpen(next);
           if (!next) closeAll();
           if (next) setMode({ type: 'idle' });
         }}
-        title='Atalhos'
+        title='Tags'
         aria-haspopup='menu'
         aria-expanded={open}
       >
-        /
+        #
       </button>
 
       {open && (
-        <div className='slash-manager__popover' role='menu' aria-label='Atalhos'>
-          <div className='slash-manager__top'>
-            <button type='button' className='slash-manager__top-btn' onClick={openCreate}>
+        <div className='tags-manager__popover' role='menu' aria-label='Tags'>
+          <div className='tags-manager__top'>
+            <button type='button' className='tags-manager__top-btn' onClick={openCreate}>
               Novo
             </button>
 
-            <div className='slash-manager__top-right'>
-              <button type='button' className='slash-manager__top-btn' onClick={openImport}>
+            <div className='tags-manager__top-right'>
+              <button type='button' className='tags-manager__top-btn' onClick={openImport}>
                 Importar
               </button>
-              <button type='button' className='slash-manager__top-btn' onClick={openExport}>
+              <button type='button' className='tags-manager__top-btn' onClick={openExport}>
                 Exportar
               </button>
             </div>
           </div>
 
-          <div className='slash-manager__body'>
+          <div className='tags-manager__body'>
             {loading ? (
-              <div className='slash-manager__empty'>Carregando…</div>
+              <div className='tags-manager__empty'>Carregando…</div>
             ) : items.length === 0 ? (
-              <div className='slash-manager__empty'>Nenhum atalho criado.</div>
+              <div className='tags-manager__empty'>Nenhuma tag criada.</div>
             ) : (
-              <div className='slash-manager__list'>
+              <div className='tags-manager__list'>
                 {items.map((it) => (
                   <button
                     key={it.id}
                     type='button'
-                    className='slash-manager__row'
+                    className='tags-manager__row'
                     onClick={() => openEdit(it)}
                     title='Editar'
                   >
-                    <span className='slash-manager__row-trigger'>{it.trigger}</span>
-                    <span className='slash-manager__row-preview'>
-                      {it.template.length > 54 ? `${it.template.slice(0, 54)}…` : it.template}
+                    <span className={`tags-manager__chip tags-manager__chip--s${it.styleId}`}>
+                      {it.label}
                     </span>
                   </button>
                 ))}
@@ -214,44 +225,54 @@ export default function SlashCommandsManager() {
             )}
 
             {mode.type === 'create' && (
-              <div className='slash-manager__panel'>
-                <div className='slash-manager__panel-title'>Novo atalho</div>
+              <div className='tags-manager__panel'>
+                <div className='tags-manager__panel-title'>Nova tag</div>
 
-                <label className='slash-manager__label'>
-                  Trigger
+                <label className='tags-manager__label'>
+                  Nome ou ícone
                   <input
-                    className='slash-manager__input'
-                    value={triggerDraft}
-                    onChange={(e) => setTriggerDraft(e.currentTarget.value)}
-                    placeholder='/atalho'
+                    className='tags-manager__input'
+                    value={labelDraft}
+                    onChange={(e) => setLabelDraft(e.currentTarget.value)}
+                    placeholder='OF ou 📱'
                     autoFocus
                   />
                 </label>
 
-                <label className='slash-manager__label'>
-                  Template
-                  <TagAutocompleteTextarea
-                    className='slash-manager__textarea'
-                    value={templateDraft}
-                    onChangeValue={setTemplateDraft}
-                    placeholder='Texto inserido ao confirmar…'
-                    rows={3}
-                  />
+                <label className='tags-manager__label'>
+                  Estilo
+                  <div className='tags-manager__style-picker' role='listbox' aria-label='Estilo'>
+                    {STYLE_IDS.map((id) => (
+                      <button
+                        key={id}
+                        type='button'
+                        className={`tags-manager__style-option ${id === styleDraft ? 'is-active' : ''}`}
+                        onClick={() => setStyleDraft(id)}
+                        role='option'
+                        aria-selected={id === styleDraft}
+                        title={styleLabel(id)}
+                      >
+                        <span className={`tags-manager__chip tags-manager__chip--s${id}`}>
+                          {labelDraft.trim() ? labelDraft.trim() : '#'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </label>
 
-                <div className='slash-manager__actions'>
+                <div className='tags-manager__actions'>
                   <button
                     type='button'
-                    className='slash-manager__action'
+                    className='tags-manager__action'
                     onClick={() => setMode({ type: 'idle' })}
                   >
                     Cancelar
                   </button>
                   <button
                     type='button'
-                    className='slash-manager__action slash-manager__action--primary'
+                    className='tags-manager__action tags-manager__action--primary'
                     onClick={submitCreate}
-                    disabled={triggerDraft.trim().length === 0}
+                    disabled={!canSave}
                   >
                     Salvar
                   </button>
@@ -260,35 +281,45 @@ export default function SlashCommandsManager() {
             )}
 
             {mode.type === 'edit' && editingItem && (
-              <div className='slash-manager__panel'>
-                <div className='slash-manager__panel-title'>Editar atalho</div>
+              <div className='tags-manager__panel'>
+                <div className='tags-manager__panel-title'>Editar tag</div>
 
-                <label className='slash-manager__label'>
-                  Trigger
+                <label className='tags-manager__label'>
+                  Nome ou ícone
                   <input
-                    className='slash-manager__input'
-                    value={triggerDraft}
-                    onChange={(e) => setTriggerDraft(e.currentTarget.value)}
-                    placeholder='/atalho'
+                    className='tags-manager__input'
+                    value={labelDraft}
+                    onChange={(e) => setLabelDraft(e.currentTarget.value)}
+                    placeholder='OF ou 📱'
                     autoFocus
                   />
                 </label>
 
-                <label className='slash-manager__label'>
-                  Template
-                  <TagAutocompleteTextarea
-                    className='slash-manager__textarea'
-                    value={templateDraft}
-                    onChangeValue={setTemplateDraft}
-                    placeholder='Texto inserido ao confirmar…'
-                    rows={3}
-                  />
+                <label className='tags-manager__label'>
+                  Estilo
+                  <div className='tags-manager__style-picker' role='listbox' aria-label='Estilo'>
+                    {STYLE_IDS.map((id) => (
+                      <button
+                        key={id}
+                        type='button'
+                        className={`tags-manager__style-option ${id === styleDraft ? 'is-active' : ''}`}
+                        onClick={() => setStyleDraft(id)}
+                        role='option'
+                        aria-selected={id === styleDraft}
+                        title={styleLabel(id)}
+                      >
+                        <span className={`tags-manager__chip tags-manager__chip--s${id}`}>
+                          {labelDraft.trim() ? labelDraft.trim() : '#'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </label>
 
-                <div className='slash-manager__actions'>
+                <div className='tags-manager__actions'>
                   <button
                     type='button'
-                    className='slash-manager__action'
+                    className='tags-manager__action'
                     onClick={() => setMode({ type: 'idle' })}
                   >
                     Fechar
@@ -296,7 +327,7 @@ export default function SlashCommandsManager() {
 
                   <button
                     type='button'
-                    className='slash-manager__action slash-manager__action--danger'
+                    className='tags-manager__action tags-manager__action--danger'
                     onClick={() => void submitRemove(editingItem.id)}
                     title='Remover'
                   >
@@ -305,9 +336,9 @@ export default function SlashCommandsManager() {
 
                   <button
                     type='button'
-                    className='slash-manager__action slash-manager__action--primary'
+                    className='tags-manager__action tags-manager__action--primary'
                     onClick={() => void submitEdit(editingItem.id)}
-                    disabled={triggerDraft.trim().length === 0}
+                    disabled={!canSave}
                   >
                     Salvar
                   </button>
@@ -316,12 +347,12 @@ export default function SlashCommandsManager() {
             )}
 
             {mode.type === 'import' && (
-              <div className='slash-manager__panel'>
-                <div className='slash-manager__panel-title'>Importar</div>
+              <div className='tags-manager__panel'>
+                <div className='tags-manager__panel-title'>Importar</div>
 
                 <input
                   ref={fileInputRef}
-                  className='slash-manager__file'
+                  className='tags-manager__file'
                   type='file'
                   accept='application/json,.json'
                   onChange={(e) => {
@@ -331,10 +362,10 @@ export default function SlashCommandsManager() {
                   }}
                 />
 
-                <div className='slash-manager__actions'>
+                <div className='tags-manager__actions'>
                   <button
                     type='button'
-                    className='slash-manager__action'
+                    className='tags-manager__action'
                     onClick={() => setMode({ type: 'idle' })}
                     disabled={importBusy}
                   >
@@ -343,7 +374,7 @@ export default function SlashCommandsManager() {
 
                   <button
                     type='button'
-                    className='slash-manager__action slash-manager__action--primary'
+                    className='tags-manager__action tags-manager__action--primary'
                     onClick={() => fileInputRef.current?.click()}
                     disabled={importBusy}
                   >
@@ -351,25 +382,25 @@ export default function SlashCommandsManager() {
                   </button>
                 </div>
 
-                {importError && <div className='slash-manager__error'>{importError}</div>}
+                {importError && <div className='tags-manager__error'>{importError}</div>}
               </div>
             )}
 
             {mode.type === 'export' && (
-              <div className='slash-manager__panel'>
-                <div className='slash-manager__panel-title'>Exportar</div>
+              <div className='tags-manager__panel'>
+                <div className='tags-manager__panel-title'>Exportar</div>
 
                 <textarea
-                  className='slash-manager__textarea slash-manager__textarea--export'
+                  className='tags-manager__textarea tags-manager__textarea--export'
                   value={exportText}
                   readOnly
                   rows={6}
                 />
 
-                <div className='slash-manager__actions'>
+                <div className='tags-manager__actions'>
                   <button
                     type='button'
-                    className='slash-manager__action'
+                    className='tags-manager__action'
                     onClick={() => setMode({ type: 'idle' })}
                   >
                     Fechar
@@ -377,8 +408,8 @@ export default function SlashCommandsManager() {
 
                   <button
                     type='button'
-                    className='slash-manager__action slash-manager__action--primary'
-                    onClick={() => downloadTextFile('slash-commands.json', exportText)}
+                    className='tags-manager__action tags-manager__action--primary'
+                    onClick={() => downloadTextFile('tags.json', exportText)}
                   >
                     Baixar JSON
                   </button>

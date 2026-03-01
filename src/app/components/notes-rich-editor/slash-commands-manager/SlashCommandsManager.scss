@@ -259,3 +259,77 @@
 .slash-manager__file {
   display: none;
 }
+
+.slash-manager__tag-area {
+  position: relative;
+}
+
+.slash-manager__tag-popover {
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius-12;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+
+  overflow: hidden;
+  z-index: 999;
+}
+
+.slash-manager__tag-list {
+  display: flex;
+  flex-direction: column;
+  padding: $space-8;
+  gap: $space-6;
+
+  overflow: auto;
+}
+
+.slash-manager__tag-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 22px 1fr 160px;
+  gap: $space-10;
+
+  padding: $space-10 $space-12;
+  border-radius: $radius-10;
+
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+
+  &:hover {
+    background: $color-nav-active;
+  }
+
+  &.is-active {
+    background: $color-nav-active;
+  }
+}
+
+.slash-manager__tag-hash {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: $font-13;
+  color: $color-text-muted;
+}
+
+.slash-manager__tag-label {
+  font-size: $font-13;
+  color: $color-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slash-manager__tag-id {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: $font-12;
+  color: $color-text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  opacity: 0.9;
+}

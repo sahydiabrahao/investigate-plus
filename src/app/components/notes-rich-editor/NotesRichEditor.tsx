@@ -33,7 +33,10 @@ import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin
 
 import { getDirectoryHandleByRelativePath } from '@/utils/get-directory-handle';
 import SlashCommandsManager from '@/app/components/notes-rich-editor/slash-commands-manager/SlashCommandsManager';
+import TagsManager from '@/app/components/notes-rich-editor/tags-manager/TagsManager';
 import SlashCommandsPlugin from '@/app/components/notes-rich-editor/plugins/SlashCommandsPlugin';
+import TagsPlugin from '@/app/components/notes-rich-editor/plugins/TagsPulgin';
+import { TagNode } from '@/app/components/notes-rich-editor/tag-node/TagNode';
 
 type NotesRichEditorProps = {
   initialState?: unknown;
@@ -140,7 +143,7 @@ export default function NotesRichEditor({ initialState, onChange }: NotesRichEdi
       },
     },
 
-    nodes: [FileLinkNode],
+    nodes: [FileLinkNode, TagNode],
 
     editorState: (editor: LexicalEditor) => {
       if (initialState) {
@@ -182,6 +185,7 @@ export default function NotesRichEditor({ initialState, onChange }: NotesRichEdi
         <HistoryPlugin />
         <TabIndentationPlugin />
         <SlashCommandsPlugin />
+        <TagsPlugin />
 
         <OnChangePlugin
           onChange={(editorState: EditorState) => {
@@ -584,6 +588,7 @@ function Toolbar() {
       </div>
 
       <SlashCommandsManager />
+      <TagsManager />
 
       <div className='notes-editor__popover-wrap' ref={attachPopoverRef}>
         <button

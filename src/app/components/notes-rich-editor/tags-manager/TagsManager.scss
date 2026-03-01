@@ -1,0 +1,348 @@
+@use '@/styles/global' as *;
+
+.tags-manager {
+  position: relative;
+  display: inline-flex;
+}
+
+.tags-manager__btn {
+  width: $size-32;
+  height: $size-32;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: $radius-8;
+  cursor: pointer;
+  color: #6b7280;
+
+  &:hover {
+    color: $color-text-dark;
+    background: $color-action-hover;
+  }
+
+  &:active {
+    transform: translateY(0.5px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.tags-manager__popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+
+  width: 420px;
+  max-width: 75vw;
+
+  background: $tag-popover-bg;
+  color: $tag-popover-text;
+
+  border: 1px solid $tag-popover-border;
+  border-radius: $radius-12;
+
+  box-shadow: $tag-popover-shadow;
+
+  overflow: hidden;
+  z-index: 50;
+}
+
+.tags-manager__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: $space-10;
+  border-bottom: 1px solid $tag-popover-divider;
+}
+
+.tags-manager__top-right {
+  display: inline-flex;
+  gap: $space-8;
+}
+
+.tags-manager__top-btn {
+  padding: $space-6 $space-10;
+  border-radius: $radius-8;
+
+  cursor: pointer;
+  font-size: $font-13;
+  font-weight: $font-weight-medium;
+  color: rgba(17, 24, 39, 0.82);
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.06);
+    color: #111827;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.tags-manager__body {
+  padding: $space-10;
+}
+
+.tags-manager__empty {
+  padding: $space-10;
+  color: $tag-popover-muted;
+  font-size: $font-13;
+}
+
+.tags-manager__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-8;
+  margin-bottom: $space-12;
+
+  max-height: 260px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.tags-manager__row {
+  width: auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: $radius-10;
+
+  cursor: pointer;
+
+  &:hover {
+    background: transparent;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.tags-manager__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: $tag-chip-gap;
+
+  padding: $tag-chip-padding-y $tag-chip-padding-x;
+  border-radius: $tag-chip-radius;
+
+  font-size: $tag-chip-font-size;
+  line-height: $tag-chip-line-height;
+  height: $tag-chip-height;
+
+  font-weight: $tag-chip-font-weight;
+
+  border: $tag-chip-border-width solid $tag-chip-border-default;
+  color: $tag-chip-text;
+
+  width: fit-content;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  vertical-align: middle;
+}
+
+.tags-manager__chip--s0 {
+  border-color: $tag-s0-border;
+  background: $tag-s0-bg;
+}
+
+.tags-manager__chip--s1 {
+  border-color: $tag-s1-border;
+  background: $tag-s1-bg;
+}
+
+.tags-manager__chip--s2 {
+  border-color: $tag-s2-border;
+  background: $tag-s2-bg;
+}
+
+.tags-manager__chip--s3 {
+  border-color: $tag-s3-border;
+  background: $tag-s3-bg;
+}
+
+.tags-manager__chip--s4 {
+  border-color: $tag-s4-border;
+  background: $tag-s4-bg;
+}
+
+.tags-manager__chip--s5 {
+  border-color: $tag-s5-border;
+  background: $tag-s5-bg;
+}
+
+.tags-manager__panel {
+  margin-top: $space-10;
+  padding-top: $space-10;
+  border-top: 1px solid $tag-popover-divider;
+}
+
+.tags-manager__panel-title {
+  font-size: $font-13;
+  font-weight: $font-weight-bold;
+  margin-bottom: $space-10;
+  color: $tag-popover-text;
+}
+
+.tags-manager__label {
+  display: block;
+  font-size: $font-13;
+  font-weight: $font-weight-medium;
+  color: rgba(17, 24, 39, 0.86);
+
+  margin-bottom: $space-10;
+}
+
+.tags-manager__input,
+.tags-manager__textarea {
+  width: 100%;
+  margin-top: $space-6;
+
+  padding: $space-8 $space-10;
+
+  border-radius: $radius-10;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+
+  color: $tag-popover-text;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+    border-color: rgba(59, 130, 246, 0.45);
+  }
+}
+
+.tags-manager__textarea {
+  resize: vertical;
+  min-height: 84px;
+}
+
+.tags-manager__textarea--export {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: $font-12;
+  line-height: $line-height-16;
+}
+
+.tags-manager__style-picker {
+  margin-top: $space-6;
+
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: $space-8;
+}
+
+.tags-manager__style-option {
+  width: 100%;
+  padding: $space-8;
+  border-radius: $radius-10;
+
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  background: rgba(17, 24, 39, 0.02);
+
+  cursor: pointer;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.06);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+
+  &.is-active {
+    border-color: rgba(17, 24, 39, 0.22);
+    background: rgba(17, 24, 39, 0.08);
+  }
+}
+
+.tags-manager__actions {
+  display: flex;
+  gap: $space-8;
+  justify-content: flex-end;
+
+  margin-top: $space-10;
+}
+
+.tags-manager__action {
+  padding: $space-8 $space-12;
+  border-radius: $radius-10;
+  cursor: pointer;
+
+  font-size: $font-13;
+  font-weight: $font-weight-medium;
+
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  color: rgba(17, 24, 39, 0.9);
+
+  background: rgba(255, 255, 255, 0.9);
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.tags-manager__action--primary {
+  background: rgba(17, 24, 39, 0.08);
+  border-color: rgba(17, 24, 39, 0.16);
+  color: $tag-popover-text;
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.12);
+  }
+}
+
+.tags-manager__action--danger {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.22);
+  color: rgba(127, 29, 29, 0.95);
+
+  &:hover {
+    background: rgba(220, 38, 38, 0.14);
+  }
+}
+
+.tags-manager__error {
+  margin-top: $space-10;
+  font-size: $font-13;
+  color: $color-status-urgent;
+}
+
+.tags-manager__file {
+  display: none;
+}

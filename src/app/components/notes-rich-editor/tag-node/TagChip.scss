@@ -1,0 +1,155 @@
+@use '@/styles/global' as *;
+
+.tag-node {
+  display: inline;
+  pointer-events: auto;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $tag-chip-gap;
+
+  pointer-events: auto;
+
+  padding: $tag-chip-padding-y $tag-chip-padding-x;
+  border-radius: $tag-chip-radius;
+
+  font-size: $tag-chip-font-size;
+  line-height: $tag-chip-line-height;
+  height: $tag-chip-height;
+
+  border: $tag-chip-border-width solid $tag-chip-border-default;
+  color: $tag-chip-text;
+
+  user-select: none;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.tag-chip__label {
+  font-weight: $tag-chip-font-weight;
+}
+
+.tag-chip--clickable {
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness($tag-chip-hover-brightness);
+  }
+
+  &:active {
+    transform: translateY($tag-chip-active-translate-y);
+  }
+}
+
+.tag-chip--s0 {
+  border-color: $tag-s0-border;
+  background: $tag-s0-bg;
+}
+
+.tag-chip--s1 {
+  border-color: $tag-s1-border;
+  background: $tag-s1-bg;
+}
+
+.tag-chip--s2 {
+  border-color: $tag-s2-border;
+  background: $tag-s2-bg;
+}
+
+.tag-chip--s3 {
+  border-color: $tag-s3-border;
+  background: $tag-s3-bg;
+}
+
+.tag-chip--s4 {
+  border-color: $tag-s4-border;
+  background: $tag-s4-bg;
+}
+
+.tag-chip--s5 {
+  border-color: $tag-s5-border;
+  background: $tag-s5-bg;
+}
+
+/* ✅ TagChip popover now uses the shared light tokens (so it matches manager/plugin) */
+.tag-chip-popover {
+  width: 320px;
+  max-width: calc(100vw - 16px);
+
+  padding: 12px;
+  border-radius: $tag-popover-radius;
+
+  background: $tag-popover-bg;
+  border: 1px solid $tag-popover-border;
+  box-shadow: $tag-popover-shadow;
+
+  color: $tag-popover-text;
+
+  z-index: 80;
+}
+
+.tag-chip-popover__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(17, 24, 39, 0.9);
+  margin-bottom: 10px;
+}
+
+.tag-chip-popover__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(17, 24, 39, 0.8);
+}
+
+.tag-chip-popover__input {
+  width: 100%;
+  margin-top: 6px;
+
+  padding: 8px 10px;
+  border-radius: 10px;
+
+  background: rgba(17, 24, 39, 0.03);
+  border: 1px solid rgba(17, 24, 39, 0.14);
+
+  color: $tag-popover-text;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+}
+
+.tag-chip-popover__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tag-chip-popover__btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+
+  cursor: pointer;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  background: rgba(17, 24, 39, 0.02);
+
+  color: rgba(17, 24, 39, 0.9);
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.06);
+  }
+}
+
+.tag-chip-popover__btn--primary {
+  background: rgba(17, 24, 39, 0.08);
+  border-color: rgba(17, 24, 39, 0.16);
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.12);
+  }
+}

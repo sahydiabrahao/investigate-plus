@@ -1,21 +1,14 @@
-import './SlashCommandsPlugin.scss';
+import './TagsPlugin.scss';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
-import type { LexicalNode, RangeSelection } from 'lexical';
-import {
-  $createTextNode,
-  $getSelection,
-  $isRangeSelection,
-  COMMAND_PRIORITY_HIGH,
-  KEY_DOWN_COMMAND,
-} from 'lexical';
+import type { RangeSelection } from 'lexical';
+import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_HIGH, KEY_DOWN_COMMAND } from 'lexical';
 
-import { useSlashCommands } from '@/app/hooks/useSlashCommands';
+import { useTags } from '@/app/hooks/useTags';
 import { $createTagNode } from '@/app/components/notes-rich-editor/tag-node/TagNode';
-import { normalizeTrigger } from '@/types/slash-commands.types';
 
 type Match = {
   open: boolean;
@@ -28,7 +21,7 @@ function isCollapsedRange(sel: RangeSelection) {
   return sel.anchor.key === sel.focus.key && sel.anchor.offset === sel.focus.offset;
 }
 
-function computeSlashMatchFromNativeSelection(): Omit<Match, 'rect'> {
+function computeTagMatchFromNativeSelection(): Omit<Match, 'rect'> {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return { open: false, query: '', tokenLen: 0 };
 
@@ -44,16 +37,16 @@ function computeSlashMatchFromNativeSelection(): Omit<Match, 'rect'> {
 
   const before = rawText.slice(0, cursorOffset);
 
-  if (!before.includes('/')) return { open: false, query: '', tokenLen: 0 };
+  if (!before.includes('#')) return { open: false, query: '', tokenLen: 0 };
   if (/\s$/.test(before)) return { open: false, query: '', tokenLen: 0 };
 
-  const slashIndex = before.lastIndexOf('/');
-  const charBefore = slashIndex > 0 ? before[slashIndex - 1] : '';
+  const hashIndex = before.lastIndexOf('#');
+  const charBefore = hashIndex > 0 ? before[hashIndex - 1] : '';
 
-  const validBoundary = slashIndex === 0 || /\s/.test(charBefore);
+  const validBoundary = hashIndex === 0 || /\s/.test(charBefore);
   if (!validBoundary) return { open: false, query: '', tokenLen: 0 };
 
-  const token = before.slice(slashIndex);
+  const token = before.slice(hashIndex);
   if (/\s/.test(token)) return { open: false, query: '', tokenLen: 0 };
 
   const query = token.slice(1);
@@ -83,60 +76,9 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function insertTemplateWithBoldAndTags(selection: RangeSelection, template: string) {
-  const nodes: LexicalNode[] = [];
-
-  let i = 0;
-  let isBold = false;
-  let textBuf = '';
-
-  const flushText = () => {
-    if (!textBuf) return;
-    const node = $createTextNode(textBuf);
-    if (isBold) node.setFormat(1);
-    nodes.push(node);
-    textBuf = '';
-  };
-
-  while (i < template.length) {
-    if (template[i] === '*' && template[i + 1] === '*') {
-      flushText();
-      isBold = !isBold;
-      i += 2;
-      continue;
-    }
-
-    if (template[i] === '#' && template[i + 1] === '{') {
-      const end = template.indexOf('}', i + 2);
-      if (end !== -1) {
-        const tagId = template.slice(i + 2, end).trim();
-        if (tagId) {
-          flushText();
-          nodes.push(
-            $createTagNode({
-              tagId,
-              description: '',
-            }),
-          );
-          i = end + 1;
-          continue;
-        }
-      }
-    }
-
-    textBuf += template[i];
-    i += 1;
-  }
-
-  flushText();
-
-  if (nodes.length === 0) return;
-  selection.insertNodes(nodes);
-}
-
-export default function SlashCommandsPlugin() {
+export default function TagsPlugin() {
   const [editor] = useLexicalComposerContext();
-  const { items } = useSlashCommands();
+  const { items } = useTags();
 
   const [match, setMatch] = useState<Match>({
     open: false,
@@ -151,10 +93,7 @@ export default function SlashCommandsPlugin() {
 
   const filtered = useMemo(() => {
     const q = match.query.trim().toLowerCase();
-
-    const list = items
-      .filter((x) => x.trigger.startsWith('/'))
-      .map((x) => ({ ...x, triggerNorm: normalizeTrigger(x.trigger) }));
+    const list = items.map((x) => ({ ...x, labelNorm: x.label.toLowerCase() }));
 
     if (!q) return list;
 
@@ -162,9 +101,8 @@ export default function SlashCommandsPlugin() {
     const contains: typeof list = [];
 
     for (const it of list) {
-      const t = it.triggerNorm.slice(1);
-      const hitStarts = t.startsWith(q);
-      const hitContains = !hitStarts && t.includes(q);
+      const hitStarts = it.labelNorm.startsWith(q);
+      const hitContains = !hitStarts && it.labelNorm.includes(q);
 
       if (hitStarts) starts.push(it);
       else if (hitContains) contains.push(it);
@@ -178,7 +116,7 @@ export default function SlashCommandsPlugin() {
     setActiveIndex(0);
   }
 
-  function applyTemplate(template: string, tokenLen: number) {
+  function applyTag(tagId: string | number, tokenLen: number) {
     editor.update(() => {
       const sel = $getSelection();
       if (!$isRangeSelection(sel)) return;
@@ -188,7 +126,14 @@ export default function SlashCommandsPlugin() {
         sel.deleteCharacter(true);
       }
 
-      insertTemplateWithBoldAndTags(sel, template);
+      sel.insertNodes([
+        $createTagNode({
+          tagId: String(tagId),
+          description: '',
+        }),
+      ]);
+
+      sel.insertText(' ');
     });
   }
 
@@ -201,7 +146,7 @@ export default function SlashCommandsPlugin() {
           return;
         }
 
-        const next = computeSlashMatchFromNativeSelection();
+        const next = computeTagMatchFromNativeSelection();
         if (!next.open) {
           if (match.open) close();
           return;
@@ -257,7 +202,7 @@ export default function SlashCommandsPlugin() {
           event.preventDefault();
           event.stopPropagation();
 
-          applyTemplate(picked.template, match.tokenLen);
+          applyTag(picked.id, match.tokenLen);
           close();
           return true;
         }
@@ -297,27 +242,26 @@ export default function SlashCommandsPlugin() {
   };
 
   return createPortal(
-    <div className='slash-commands' ref={rootRef} style={style} role='menu' aria-label='Atalhos'>
+    <div className='tags-commands' ref={rootRef} style={style} role='menu' aria-label='Tags'>
       {filtered.length === 0 ? (
-        <div className='slash-commands__empty'>Nenhum atalho</div>
+        <div className='tags-commands__empty'>Nenhuma tag</div>
       ) : (
-        <div className='slash-commands__list'>
+        <div className='tags-commands__list'>
           {filtered.map((it, idx) => (
             <button
               key={it.id}
               type='button'
-              className={`slash-commands__item ${idx === activeIndex ? 'is-active' : ''}`}
+              className={`tags-commands__item ${idx === activeIndex ? 'is-active' : ''}`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                applyTemplate(it.template, match.tokenLen);
+                applyTag(it.id, match.tokenLen);
                 close();
               }}
-              title='Inserir'
+              title='Aplicar'
             >
-              <span className='slash-commands__trigger'>{it.triggerNorm}</span>
-              <span className='slash-commands__preview'>
-                {it.template.length > 60 ? `${it.template.slice(0, 60)}…` : it.template}
+              <span className={`tags-commands__chip tags-commands__chip--s${it.styleId}`}>
+                {it.label}
               </span>
             </button>
           ))}

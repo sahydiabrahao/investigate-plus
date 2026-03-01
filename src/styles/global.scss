@@ -46,6 +46,7 @@ $font-family-sans:
 $font-0: 0;
 $font-4: 4px;
 $font-8: 8px;
+$font-11: 11px;
 $font-12: 12px;
 $font-13: 13px;
 $font-14: 14px;
@@ -106,6 +107,83 @@ $radius-10: 10px;
 $radius-12: 12px;
 
 $focus-ring: 0 0 0 3px rgba(17, 24, 39, 0.25);
+
+/* =================================================
+   TAG COMPONENT TOKENS (single source of truth)
+================================================= */
+
+/* ---- base structure ---- */
+$tag-chip-gap: 6px;
+
+$tag-chip-font-size: 12px;
+$tag-chip-font-weight: 600;
+$tag-chip-line-height: 1;
+$tag-chip-height: 14px;
+
+$tag-chip-padding-y: 0px;
+$tag-chip-padding-x: 2px;
+
+$tag-chip-radius: 3px;
+$tag-chip-border-width: 1px;
+
+/* ---- base colors ---- */
+$tag-chip-text: #111827;
+$tag-chip-border-default: rgba(0, 0, 0, 0);
+
+/* ---- interactions ---- */
+$tag-chip-hover-brightness: 1.05;
+$tag-chip-active-translate-y: 0.5px;
+
+/* ---- popover (LIGHT surface) ---- */
+$tag-popover-bg: rgba(255, 255, 255, 0.98);
+$tag-popover-text: #111827;
+$tag-popover-border: rgba(17, 24, 39, 0.12);
+$tag-popover-radius: 12px;
+$tag-popover-shadow:
+  0 18px 46px rgba(0, 0, 0, 0.22),
+  0 2px 10px rgba(0, 0, 0, 0.08);
+
+/* ---- popover dividers & muted ---- */
+$tag-popover-divider: rgba(17, 24, 39, 0.1);
+$tag-popover-muted: rgba(17, 24, 39, 0.6);
+
+/* ---- list item states (plugin) ---- */
+$tag-menu-item-hover-bg: rgba(17, 24, 39, 0.06);
+$tag-menu-item-active-bg: rgba(59, 130, 246, 0.1);
+$tag-menu-item-active-ring: rgba(59, 130, 246, 0.2);
+
+/* ---- chip on light surfaces (manager/plugin) ---- */
+$tag-surface-chip-border: rgba(17, 24, 39, 0.14);
+$tag-surface-chip-bg: rgba(17, 24, 39, 0.04);
+$tag-surface-chip-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+
+/* ---- active chip ring (plugin) ---- */
+$tag-chip-active-ring-inner: rgba(59, 130, 246, 0.28);
+$tag-chip-active-ring-outer: rgba(59, 130, 246, 0.1);
+
+/* =================================================
+   TAG STYLES (variants) — low contrast (UX)
+================================================= */
+
+$tag-text: $color-text-dark;
+
+$tag-s0-border: rgba(100, 116, 139, 0.25);
+$tag-s0-bg: rgba(100, 116, 139, 0.12);
+
+$tag-s1-border: rgba(161, 98, 7, 0.22);
+$tag-s1-bg: rgba(161, 98, 7, 0.1);
+
+$tag-s2-border: rgba(22, 101, 52, 0.22);
+$tag-s2-bg: rgba(22, 101, 52, 0.1);
+
+$tag-s3-border: rgba(30, 64, 175, 0.2);
+$tag-s3-bg: rgba(30, 64, 175, 0.09);
+
+$tag-s4-border: rgba(100, 116, 139, 0.25);
+$tag-s4-bg: rgba(100, 116, 139, 0.12);
+
+$tag-s5-border: rgba(153, 27, 27, 0.22);
+$tag-s5-bg: rgba(153, 27, 27, 0.1);
 
 /* =================================================
    BASE / RESET

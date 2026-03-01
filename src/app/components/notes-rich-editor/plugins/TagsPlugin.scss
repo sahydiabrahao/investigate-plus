@@ -1,0 +1,116 @@
+@use '@/styles/global' as *;
+
+.tags-commands {
+  width: 420px;
+  max-width: 75vw;
+
+  background: $tag-popover-bg;
+  color: $tag-popover-text;
+
+  border: 1px solid $tag-popover-border;
+  border-radius: $radius-12;
+
+  box-shadow: $tag-popover-shadow;
+
+  overflow: hidden;
+  z-index: 70;
+}
+
+.tags-commands__empty {
+  padding: $space-10;
+  font-size: $font-13;
+  color: $tag-popover-muted;
+}
+
+.tags-commands__list {
+  display: flex;
+  flex-direction: column;
+  padding: $space-6;
+  gap: $space-4;
+
+  max-height: 260px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.tags-commands__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  padding: $space-8 $space-10;
+  border-radius: $radius-10;
+
+  cursor: pointer;
+  background: transparent;
+
+  &:hover {
+    background: rgba(17, 24, 39, 0.06);
+  }
+
+  &.is-active {
+    background: rgba(17, 24, 39, 0.08);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.tags-commands__chip {
+  display: inline-flex;
+  align-items: center;
+
+  gap: $tag-chip-gap;
+
+  padding: $tag-chip-padding-y $tag-chip-padding-x;
+  border-radius: $tag-chip-radius;
+
+  font-size: $tag-chip-font-size;
+  font-weight: $tag-chip-font-weight;
+  line-height: $tag-chip-line-height;
+  height: $tag-chip-height;
+
+  font-family: inherit;
+
+  border: $tag-chip-border-width solid $tag-chip-border-default;
+  color: $tag-chip-text;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+
+  vertical-align: middle;
+}
+
+.tags-commands__chip--s0 {
+  border-color: $tag-s0-border;
+  background: $tag-s0-bg;
+}
+
+.tags-commands__chip--s1 {
+  border-color: $tag-s1-border;
+  background: $tag-s1-bg;
+}
+
+.tags-commands__chip--s2 {
+  border-color: $tag-s2-border;
+  background: $tag-s2-bg;
+}
+
+.tags-commands__chip--s3 {
+  border-color: $tag-s3-border;
+  background: $tag-s3-bg;
+}
+
+.tags-commands__chip--s4 {
+  border-color: $tag-s4-border;
+  background: $tag-s4-bg;
+}
+
+.tags-commands__chip--s5 {
+  border-color: $tag-s5-border;
+  background: $tag-s5-bg;
+}
