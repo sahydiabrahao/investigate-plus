@@ -11,6 +11,7 @@ import {
 } from '@/utils/open-file';
 
 import { INVESTIGATION_FILE, type CaseStatus } from '@/constants/investigation.constants';
+import { PREFERENCIAS_GLOBAIS_FILE, PREFERENCIAS_GLOBAIS_LABEL } from '@/constants/preferencias-globais.constants';
 
 import { CheckIcon, ReviewIcon, UrgentIcon, PendingIcon, WaitingIcon, NullIcon } from '@/app/icons';
 
@@ -137,7 +138,7 @@ function TreeItem({
       return;
     }
 
-    if (node.name === INVESTIGATION_FILE) return;
+    if (node.name === INVESTIGATION_FILE || node.name === PREFERENCIAS_GLOBAIS_FILE) return;
 
     try {
       await openFileInNewTab(node.handle, node.name);
@@ -168,9 +169,13 @@ function TreeItem({
     ? node.children.filter((child) => {
         if (child.type !== 'file') return true;
         if (isCaseCandidate && child.name === INVESTIGATION_FILE) return false;
+        if (level === 0 && child.name === PREFERENCIAS_GLOBAIS_FILE) return false;
         return true;
       })
     : [];
+
+  const hasPinFile =
+    isDir && level === 0 && node.children.some((child) => child.type === 'file' && child.name === PREFERENCIAS_GLOBAIS_FILE);
 
   const caseStatus = isCaseCandidate && isDir ? (node.status ?? null) : null;
 
@@ -215,6 +220,15 @@ function TreeItem({
             </li>
           )}
 
+                    {hasPinFile && (
+            <li className='menu__row' style={{ '--level': visualLevel + 1 } as React.CSSProperties}>
+              <button type='button' className='menu__item menu__item--investigation' disabled>
+                <span className='menu__caret' />
+                <span className='menu__icon'>{'\u{1F4CC}'}</span>
+                <span className='menu__label'>{PREFERENCIAS_GLOBAIS_LABEL}</span>
+              </button>
+            </li>
+          )}
           {visibleChildren.map((child) => (
             <TreeItem
               key={child.path}
@@ -231,3 +245,7 @@ function TreeItem({
     </>
   );
 }
+
+
+
+
